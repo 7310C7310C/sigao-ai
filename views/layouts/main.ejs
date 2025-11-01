@@ -7,6 +7,10 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- 防止搜索引擎索引 -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta name="baiduspider" content="noindex, nofollow">
     <title><%= typeof title !== 'undefined' ? title : '思高圣经' %></title>
     <link rel="stylesheet" href="/css/style.css">
     <%- typeof extraHead !== 'undefined' ? extraHead : '' %>

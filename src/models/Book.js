@@ -9,7 +9,7 @@ class Book {
    */
   static async findAll() {
     const [rows] = await query(
-      'SELECT id, code, name_cn, book_type FROM books ORDER BY order_index'
+      'SELECT id, code, name_cn, book_type, testament FROM books ORDER BY order_index'
     );
     return rows;
   }

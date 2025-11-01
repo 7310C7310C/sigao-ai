@@ -23,6 +23,18 @@ app.use(requestLogger);
 // 路由
 app.use('/', routes);
 
+// SPA 回退：所有非 API 请求返回 index.html（支持 Hash 路由）
+app.get('*', function(req, res, next) {
+  // 排除 API 路由和静态资源
+  if (req.path.startsWith('/api/') || 
+      req.path.startsWith('/admin/') ||
+      req.path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+    return next();
+  }
+  // 返回 SPA 入口页面
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+});
+
 // 404 处理
 app.use(notFoundHandler);
 

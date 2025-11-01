@@ -9,7 +9,11 @@ class Verse {
    */
   static async findByBookAndChapter(bookId, chapter) {
     const [rows] = await execute(
-      'SELECT * FROM verses WHERE book_id = ? AND chapter = ? ORDER BY line_index',
+      `SELECT v.*, b.name_cn as book_name 
+       FROM verses v 
+       LEFT JOIN books b ON v.book_id = b.id 
+       WHERE v.book_id = ? AND v.chapter = ? 
+       ORDER BY v.line_index`,
       [bookId, chapter]
     );
     return rows;
