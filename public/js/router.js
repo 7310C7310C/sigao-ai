@@ -49,7 +49,6 @@
     function ajaxGet(url, callback) {
         // 检查缓存
         if (appState.cache[url]) {
-            console.log('从缓存读取:', url);
             // 使用 setTimeout 确保异步调用，避免同步回调
             setTimeout(function() {
                 callback(null, appState.cache[url]);
@@ -57,7 +56,6 @@
             return;
         }
         
-        console.log('网络请求:', url);
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
@@ -69,7 +67,6 @@
                         var data = JSON.parse(xhr.responseText);
                         // 缓存结果
                         appState.cache[url] = data;
-                        console.log('缓存成功:', url);
                         callback(null, data);
                     } catch (e) {
                         callback(e);
@@ -92,7 +89,6 @@
      */
     function preloadChapters(navigation) {
         if (!navigation) {
-            console.log('预读：没有导航数据');
             return;
         }
         
@@ -100,19 +96,13 @@
         if (navigation.prev) {
             var prevVersesUrl = '/api/verses?bookId=' + navigation.prev.bookId + '&chapter=' + navigation.prev.chapter;
             var prevNavUrl = '/api/navigation?bookId=' + navigation.prev.bookId + '&chapter=' + navigation.prev.chapter;
-            console.log('预读上一章:', prevVersesUrl);
             
             ajaxGet(prevVersesUrl, function(err) {
                 if (!err) {
-                    console.log('预读上一章经文成功');
                     // 同时预读导航数据
-                    ajaxGet(prevNavUrl, function(err2) {
-                        if (!err2) {
-                            console.log('预读上一章导航成功');
-                        }
+                    ajaxGet(prevNavUrl, function() {
+                        // 预读完成
                     });
-                } else {
-                    console.log('预读上一章失败:', err);
                 }
             });
         }
@@ -121,19 +111,13 @@
         if (navigation.next) {
             var nextVersesUrl = '/api/verses?bookId=' + navigation.next.bookId + '&chapter=' + navigation.next.chapter;
             var nextNavUrl = '/api/navigation?bookId=' + navigation.next.bookId + '&chapter=' + navigation.next.chapter;
-            console.log('预读下一章:', nextVersesUrl);
             
             ajaxGet(nextVersesUrl, function(err) {
                 if (!err) {
-                    console.log('预读下一章经文成功');
                     // 同时预读导航数据
-                    ajaxGet(nextNavUrl, function(err2) {
-                        if (!err2) {
-                            console.log('预读下一章导航成功');
-                        }
+                    ajaxGet(nextNavUrl, function() {
+                        // 预读完成
                     });
-                } else {
-                    console.log('预读下一章失败:', err);
                 }
             });
         }
