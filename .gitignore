@@ -20,6 +20,11 @@ logs/
 tmp/
 *.tmp
 cache/
+temp/
+
+# Old backup files
+*.old
+*.bak
 
 # Build outputs
 dist/

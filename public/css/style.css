@@ -1,0 +1,419 @@
+/* ==========================================
+   基础样式 - 兼容旧设备
+   支持: iOS 10+, Android 5.0+, 微信浏览器
+   ========================================== */
+
+/* CSS Reset & 基础设置 */
+* {
+    margin: 0;
+    padding: 0;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", 
+                 "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+    padding: 0;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 容器 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+/* 标题 */
+h1 {
+    color: #2c3e50;
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #3498db;
+    font-weight: 600;
+}
+
+h2 {
+    color: #34495e;
+    font-size: 1.5rem;
+    margin: 1.5rem 0 1rem;
+    font-weight: 500;
+}
+
+h3 {
+    color: #34495e;
+    font-size: 1.25rem;
+    margin: 1rem 0 0.75rem;
+    font-weight: 500;
+}
+
+/* 链接 */
+a {
+    color: #3498db;
+    text-decoration: none;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    transition: color 0.2s ease;
+}
+
+a:hover,
+a:active {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+a:focus {
+    outline: 2px solid #3498db;
+    outline-offset: 2px;
+}
+
+/* 列表 */
+ul, ol {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+li {
+    margin: 0.75rem 0;
+    line-height: 1.8;
+}
+
+/* 按钮和表单 */
+button,
+input[type="submit"],
+input[type="button"],
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    color: #fff;
+    background-color: #3498db;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    min-height: 44px;
+    min-width: 44px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    transition: background-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+.btn:hover {
+    background-color: #2980b9;
+}
+
+button:active,
+input[type="submit"]:active,
+input[type="button"]:active,
+.btn:active {
+    background-color: #21618c;
+    transform: translateY(1px);
+}
+
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid #3498db;
+    outline-offset: 2px;
+}
+
+input[type="file"] {
+    display: block;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* 表单布局 */
+form {
+    margin: 1.5rem 0;
+}
+
+/* 消息提示 */
+.message {
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 4px;
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.message.success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+/* 经文列表样式 */
+.verse-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.verse-list li {
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    background-color: #f8f9fa;
+    border-left: 3px solid #3498db;
+    border-radius: 0 4px 4px 0;
+}
+
+.verse-ref {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-right: 0.5rem;
+}
+
+.verse-text {
+    color: #34495e;
+}
+
+/* 章节列表 */
+.chapter-list {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+    list-style: none;
+    padding: 0;
+}
+
+.chapter-list li {
+    margin: 0;
+}
+
+.chapter-list a {
+    display: block;
+    padding: 0.75rem 1rem;
+    min-width: 60px;
+    text-align: center;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.chapter-list a:hover {
+    background-color: #3498db;
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 书卷列表 */
+.book-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.book-list li {
+    margin: 0.5rem 0;
+}
+
+.book-list a {
+    display: block;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border-left: 4px solid #3498db;
+    transition: all 0.2s ease;
+}
+
+.book-list a:hover {
+    background-color: #e9ecef;
+    border-left-color: #2980b9;
+    text-decoration: none;
+    transform: translateX(4px);
+}
+
+.book-type {
+    display: inline-block;
+    font-size: 0.875rem;
+    color: #7f8c8d;
+    margin-left: 0.5rem;
+}
+
+/* 导航 */
+.nav-links {
+    margin: 2rem 0 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.nav-links a {
+    display: inline-block;
+    margin-right: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* ==========================================
+   响应式设计 - 平板和手机
+   ========================================== */
+
+/* 平板（iPad 等） */
+@media screen and (max-width: 768px) {
+    html {
+        font-size: 15px;
+    }
+    
+    .container {
+        padding: 0.75rem;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    h2 {
+        font-size: 1.25rem;
+    }
+    
+    .chapter-list a {
+        min-width: 50px;
+        padding: 0.65rem 0.85rem;
+    }
+}
+
+/* 手机 */
+@media screen and (max-width: 480px) {
+    html {
+        font-size: 14px;
+    }
+    
+    .container {
+        padding: 0.5rem;
+    }
+    
+    h1 {
+        font-size: 1.35rem;
+        margin-bottom: 0.875rem;
+    }
+    
+    h2 {
+        font-size: 1.15rem;
+    }
+    
+    button,
+    input[type="submit"],
+    input[type="button"],
+    .btn {
+        width: 100%;
+        padding: 0.875rem;
+    }
+    
+    input[type="file"] {
+        max-width: 100%;
+        font-size: 0.9rem;
+    }
+    
+    .chapter-list {
+        gap: 0.375rem;
+    }
+    
+    .chapter-list a {
+        min-width: 44px;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .book-list a {
+        padding: 0.875rem;
+    }
+    
+    .verse-list li {
+        padding: 0.65rem;
+        font-size: 0.95rem;
+    }
+    
+    .nav-links a {
+        display: block;
+        margin: 0.5rem 0;
+    }
+}
+
+/* 小屏手机 */
+@media screen and (max-width: 360px) {
+    html {
+        font-size: 13px;
+    }
+    
+    .container {
+        padding: 0.375rem;
+    }
+    
+    .chapter-list a {
+        min-width: 40px;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* ==========================================
+   打印样式
+   ========================================== */
+@media print {
+    body {
+        background-color: #fff;
+    }
+    
+    .container {
+        padding: 0;
+    }
+    
+    a {
+        color: #000;
+        text-decoration: underline;
+    }
+    
+    button,
+    .nav-links {
+        display: none;
+    }
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>404 - 页面未找到</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .error-container {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        .error-code {
+            font-size: 6rem;
+            font-weight: 700;
+            color: #e74c3c;
+            margin: 0;
+            line-height: 1;
+        }
+        .error-message {
+            font-size: 1.5rem;
+            color: #7f8c8d;
+            margin: 1rem 0;
+        }
+        .error-url {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-container">
+            <h1 class="error-code">404</h1>
+            <p class="error-message">页面未找到</p>
+            <p>抱歉，您访问的页面不存在</p>
+            <p class="error-url"><%= url %></p>
+            <div class="nav-links" style="margin-top: 2rem;">
+                <a href="/">🏠 返回首页</a>
+            </div>
+        </div>
+    </div>
+    <script src="/js/main.js"></script>
+</body>
+</html>

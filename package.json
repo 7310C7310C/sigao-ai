@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "import:dev": "ts-node ./scripts/import_excel.ts"
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "import:dev": "ts-node ./scripts/import/import_excel.ts"
   },
   "dependencies": {
     "dotenv": "^16.0.0",

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>章节列表 - 思高圣经</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📑 章节列表</h1>
+        <ul class="chapter-list">
+            <% chapters.forEach(function(c){ %>
+                <li><a href="/book/<%= bookId %>/chapter/<%= c.chapter %>"><%= c.chapter %></a></li>
+            <% }) %>
+        </ul>
+        <div class="nav-links">
+            <a href="/">← 返回书卷列表</a>
+        </div>
+    </div>
+    <script src="/js/main.js"></script>
+</body>
+</html>
