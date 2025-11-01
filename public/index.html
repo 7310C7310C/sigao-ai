@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
@@ -62,9 +63,116 @@
         .error-message.active {
             display: block;
         }
+        
+        /* 字号选择器 */
+        .font-size-selector {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+        }
+        
+        /* 确保 body 和容器支持相对定位 */
+        body {
+            position: relative;
+        }
+        
+        .font-size-button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #333;
+        }
+        
+        .font-size-button:hover {
+            border-color: #3498db;
+            background-color: #f8f9fa;
+        }
+        
+        .font-size-button:active {
+            background-color: #e9ecef;
+        }
+        
+        .font-size-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            -webkit-box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            -moz-box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-width: 100px;
+        }
+        
+        .font-size-options.active {
+            display: block;
+        }
+        
+        .font-size-options button {
+            display: block;
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border: none;
+            background: white;
+            color: #333;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .font-size-options button:last-child {
+            border-bottom: none;
+        }
+        
+        .font-size-options button:hover {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .font-size-options button.active {
+            background-color: #e3f2fd;
+            color: #3498db;
+            font-weight: 600;
+        }
+        
+        @media screen and (max-width: 480px) {
+            .font-size-selector {
+                top: 0.5rem;
+                right: 0.5rem;
+            }
+            
+            .font-size-button {
+                font-size: 0.85rem;
+                padding: 0.4rem 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- 字号选择器（固定位置，不会被路由清除） -->
+    <div class="font-size-selector">
+        <button class="font-size-button" id="font-size-toggle" aria-label="选择字号">
+            字号
+        </button>
+        <div class="font-size-options" id="font-size-options">
+            <button data-size="14">小</button>
+            <button data-size="16">中</button>
+            <button data-size="18" class="active">默认</button>
+            <button data-size="20">大</button>
+            <button data-size="22">特大</button>
+        </div>
+    </div>
+    
     <!-- 加载动画 -->
     <div class="loading-spinner" id="loading">
         <div class="spinner"></div>
@@ -84,6 +192,7 @@
     </div>
     
     <!-- 脚本 -->
+    <script src="/js/font-size-control.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/router.js"></script>
 </body>

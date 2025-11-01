@@ -50,11 +50,16 @@
             'right: 20px;' +
             'width: 50px;' +
             'height: 50px;' +
+            'min-width: 50px;' +
+            'min-height: 50px;' +
             'border-radius: 50%;' +
             'background-color: #3498db;' +
             'color: white;' +
             'border: none;' +
             'font-size: 24px;' +
+            'line-height: 48px;' +
+            'text-align: center;' +
+            'padding: 0;' +
             'cursor: pointer;' +
             'opacity: 0;' +
             'visibility: hidden;' +

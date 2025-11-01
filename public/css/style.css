@@ -13,7 +13,7 @@
 }
 
 html {
-    font-size: 16px;
+    font-size: 18px; /* 默认字号调大，由 JS 动态控制 */
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -204,6 +204,37 @@ form {
     color: #34495e;
 }
 
+/* 经文显示容器（router.js 生成的） */
+.verses {
+    margin: 2rem 0;
+    line-height: 1.8;
+}
+
+.verse {
+    padding: 0.5rem 0;
+    line-height: 1.8;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.verse:last-child {
+    border-bottom: none;
+}
+
+.verse-number {
+    display: inline-block;
+    min-width: 1.75rem;
+    font-weight: 600;
+    color: #3498db;
+    margin-right: 0.25rem;
+    vertical-align: top;
+}
+
+.verse-text {
+    display: inline;
+    color: #2c3e50;
+    line-height: 1.8;
+}
+
 /* 章节列表 */
 .chapter-list {
     display: -webkit-box;
@@ -352,9 +383,7 @@ form {
 
 /* 平板（iPad 等） */
 @media screen and (max-width: 768px) {
-    html {
-        font-size: 15px;
-    }
+    /* html font-size 由 JS 控制，不在这里设置 */
     
     .container {
         padding: 0.75rem;
@@ -377,9 +406,7 @@ form {
 
 /* 手机 */
 @media screen and (max-width: 480px) {
-    html {
-        font-size: 14px;
-    }
+    /* html font-size 由 JS 控制，不在这里设置 */
     
     .container {
         padding: 0.5rem;
