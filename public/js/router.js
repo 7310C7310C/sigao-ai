@@ -49,10 +49,15 @@
     function ajaxGet(url, callback) {
         // 检查缓存
         if (appState.cache[url]) {
-            callback(null, appState.cache[url]);
+            console.log('从缓存读取:', url);
+            // 使用 setTimeout 确保异步调用，避免同步回调
+            setTimeout(function() {
+                callback(null, appState.cache[url]);
+            }, 0);
             return;
         }
         
+        console.log('网络请求:', url);
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
@@ -64,6 +69,7 @@
                         var data = JSON.parse(xhr.responseText);
                         // 缓存结果
                         appState.cache[url] = data;
+                        console.log('缓存成功:', url);
                         callback(null, data);
                     } catch (e) {
                         callback(e);
@@ -79,6 +85,58 @@
         };
         
         xhr.send();
+    }
+    
+    /**
+     * 预读上一章和下一章（提升用户体验）
+     */
+    function preloadChapters(navigation) {
+        if (!navigation) {
+            console.log('预读：没有导航数据');
+            return;
+        }
+        
+        // 预读上一章
+        if (navigation.prev) {
+            var prevVersesUrl = '/api/verses?bookId=' + navigation.prev.bookId + '&chapter=' + navigation.prev.chapter;
+            var prevNavUrl = '/api/navigation?bookId=' + navigation.prev.bookId + '&chapter=' + navigation.prev.chapter;
+            console.log('预读上一章:', prevVersesUrl);
+            
+            ajaxGet(prevVersesUrl, function(err) {
+                if (!err) {
+                    console.log('预读上一章经文成功');
+                    // 同时预读导航数据
+                    ajaxGet(prevNavUrl, function(err2) {
+                        if (!err2) {
+                            console.log('预读上一章导航成功');
+                        }
+                    });
+                } else {
+                    console.log('预读上一章失败:', err);
+                }
+            });
+        }
+        
+        // 预读下一章
+        if (navigation.next) {
+            var nextVersesUrl = '/api/verses?bookId=' + navigation.next.bookId + '&chapter=' + navigation.next.chapter;
+            var nextNavUrl = '/api/navigation?bookId=' + navigation.next.bookId + '&chapter=' + navigation.next.chapter;
+            console.log('预读下一章:', nextVersesUrl);
+            
+            ajaxGet(nextVersesUrl, function(err) {
+                if (!err) {
+                    console.log('预读下一章经文成功');
+                    // 同时预读导航数据
+                    ajaxGet(nextNavUrl, function(err2) {
+                        if (!err2) {
+                            console.log('预读下一章导航成功');
+                        }
+                    });
+                } else {
+                    console.log('预读下一章失败:', err);
+                }
+            });
+        }
     }
     
     /**
@@ -158,9 +216,6 @@
             html += '</div>';
         }
         
-        html += '<div class="nav-links" style="margin-top: 30px;">';
-        html += '<a href="/admin">⚙️ 管理后台</a>';
-        html += '</div>';
         html += '</div>';
         
         return html;
@@ -178,7 +233,14 @@
         
         var html = '<div class="container">';
         html += '<h1>' + bookName + '</h1>';
-        html += '<h2>章节列表</h2>';
+        
+        // 面包屑导航
+        html += '<div class="breadcrumb">';
+        html += '<a href="#/">首页</a>';
+        html += ' / ';
+        html += '<span>' + bookName + '</span>';
+        html += '</div>';
+        
         html += '<ul class="chapter-list">';
         
         for (var i = 0; i < chapters.length; i++) {
@@ -192,7 +254,7 @@
         
         html += '</ul>';
         html += '<div class="nav-links">';
-        html += '<a href="#/">← 返回书卷列表</a>';
+        html += '<a href="#/">返回首页</a>';
         html += '</div>';
         html += '</div>';
         
@@ -211,37 +273,74 @@
         
         var html = '<div class="container">';
         html += '<h1>' + bookName + ' 第 ' + chapter + ' 章</h1>';
+        
+        // 面包屑导航
+        html += '<div class="breadcrumb">';
+        html += '<a href="#/">首页</a>';
+        html += ' / ';
+        html += '<a href="#/book/' + bookId + '">' + bookName + '</a>';
+        html += ' / ';
+        html += '<span>第 ' + chapter + ' 章</span>';
+        html += '</div>';
+        
+        // 顶部导航（去掉返回首页）
+        html += '<div class="nav-links top-nav">';
+        
+        // 上一章（始终显示）
+        if (navigation && navigation.prev) {
+            var prevLink = '#/book/' + navigation.prev.bookId + '/chapter/' + navigation.prev.chapter;
+            html += '<a href="' + prevLink + '">上一章</a>';
+        } else {
+            html += '<a class="disabled">上一章</a>';
+        }
+        
+        // 下一章（始终显示）
+        if (navigation && navigation.next) {
+            var nextLink = '#/book/' + navigation.next.bookId + '/chapter/' + navigation.next.chapter;
+            html += '<a href="' + nextLink + '">下一章</a>';
+        } else {
+            html += '<a class="disabled">下一章</a>';
+        }
+        
+        html += '</div>';
+        
+        // 经文内容
         html += '<div class="verses">';
         
         for (var i = 0; i < verses.length; i++) {
             var verse = verses[i];
             // API 返回的字段是 verse_ref 和 text
-            html += '<div class="verse" id="verse-' + verse.verse_ref + '">';
-            html += '<span class="verse-number">' + verse.verse_ref + '</span> ';
+            html += '<div class="verse" id="verse-' + (verse.verse_ref || i) + '">';
+            // 只有当 verse_ref 存在且不为 null 时才显示节号
+            if (verse.verse_ref && verse.verse_ref !== 'null') {
+                html += '<span class="verse-number">' + verse.verse_ref + '</span> ';
+            }
             html += '<span class="verse-text">' + verse.text + '</span>';
             html += '</div>';
         }
         
         html += '</div>';
         
-        // 导航链接
+        // 底部导航（完整版）
         html += '<div class="nav-links">';
         
-        // 上一章（支持跨卷）
+        // 上一章（始终显示）
         if (navigation && navigation.prev) {
             var prevLink = '#/book/' + navigation.prev.bookId + '/chapter/' + navigation.prev.chapter;
-            var prevText = navigation.prev.bookId === bookId ? '← 上一章' : '← ' + navigation.prev.bookName + ' ' + navigation.prev.chapter;
-            html += '<a href="' + prevLink + '">' + prevText + '</a>';
+            html += '<a href="' + prevLink + '">上一章</a>';
+        } else {
+            html += '<a class="disabled">上一章</a>';
         }
         
+        html += '<a href="#/">返回首页</a>';
         html += '<a href="#/book/' + bookId + '">章节列表</a>';
-        html += '<a href="#/">书卷列表</a>';
         
-        // 下一章（支持跨卷）
+        // 下一章（始终显示）
         if (navigation && navigation.next) {
             var nextLink = '#/book/' + navigation.next.bookId + '/chapter/' + navigation.next.chapter;
-            var nextText = navigation.next.bookId === bookId ? '下一章 →' : navigation.next.bookName + ' ' + navigation.next.chapter + ' →';
-            html += '<a href="' + nextLink + '">' + nextText + '</a>';
+            html += '<a href="' + nextLink + '">下一章</a>';
+        } else {
+            html += '<a class="disabled">下一章</a>';
         }
         
         html += '</div>';
@@ -338,6 +437,10 @@
                     if (versesData && navData) {
                         container.innerHTML = renderVerses(versesData, bookId, parseInt(chapter), navData);
                         window.scrollTo(0, 0);
+                        // 页面渲染完成后预读上一章和下一章
+                        setTimeout(function() {
+                            preloadChapters(navData);
+                        }, 100);
                     } else {
                         container.innerHTML = '<div class="container"><p>加载失败，请刷新重试</p></div>';
                     }

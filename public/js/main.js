@@ -46,7 +46,7 @@
         button.setAttribute('aria-label', '返回顶部');
         button.style.cssText = 
             'position: fixed;' +
-            'bottom: 20px;' +
+            'bottom: 80px;' +
             'right: 20px;' +
             'width: 50px;' +
             'height: 50px;' +

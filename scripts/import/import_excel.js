@@ -44,6 +44,16 @@ async function run() {
   // connect to database
   await conn.changeUser({ database: DB_NAME });
 
+  // 清空现有数据（禁用外键检查）
+  console.log('Clearing existing data...');
+  await conn.execute('SET FOREIGN_KEY_CHECKS=0');
+  await conn.execute('TRUNCATE TABLE verses');
+  await conn.execute('TRUNCATE TABLE books');
+  await conn.execute('TRUNCATE TABLE translations');
+  await conn.execute('TRUNCATE TABLE ai_responses_cache');
+  await conn.execute('SET FOREIGN_KEY_CHECKS=1');
+  console.log('Data cleared.');
+
   // ensure a translation and book exist
   const [transRows] = await conn.execute('SELECT id FROM translations WHERE code=? LIMIT 1', ['sigao_cn']);
   let translationId;

@@ -1,20 +1,22 @@
 /**
- * 字号控制功能 - 弹出选择版本
+ * 设置控制功能 - 字号和夜间模式
  * ES5 语法，兼容旧浏览器
  */
 
 (function() {
     'use strict';
     
-    var STORAGE_KEY = 'bible_font_size';
-    var DEFAULT_SIZE = 18;
+    var FONT_SIZE_KEY = 'bible_font_size';
+    var THEME_KEY = 'bible_theme';
+    var DEFAULT_SIZE = 18; // 默认字号对应"默认"选项
+    var DEFAULT_THEME = 'light';
     
     /**
      * 获取保存的字号
      */
     function getSavedFontSize() {
         try {
-            var saved = localStorage.getItem(STORAGE_KEY);
+            var saved = localStorage.getItem(FONT_SIZE_KEY);
             if (saved) {
                 return parseInt(saved, 10);
             }
@@ -29,9 +31,35 @@
      */
     function saveFontSize(size) {
         try {
-            localStorage.setItem(STORAGE_KEY, size.toString());
+            localStorage.setItem(FONT_SIZE_KEY, size.toString());
         } catch (e) {
             console.log('无法保存字号设置');
+        }
+    }
+    
+    /**
+     * 获取保存的主题
+     */
+    function getSavedTheme() {
+        try {
+            var saved = localStorage.getItem(THEME_KEY);
+            if (saved) {
+                return saved;
+            }
+        } catch (e) {
+            console.log('无法读取主题设置');
+        }
+        return DEFAULT_THEME;
+    }
+    
+    /**
+     * 保存主题设置
+     */
+    function saveTheme(theme) {
+        try {
+            localStorage.setItem(THEME_KEY, theme);
+        } catch (e) {
+            console.log('无法保存主题设置');
         }
     }
     
@@ -42,42 +70,62 @@
         document.documentElement.style.fontSize = size + 'px';
         saveFontSize(size);
         
-        // 更新按钮激活状态和主按钮文字
-        var toggleBtn = document.getElementById('font-size-toggle');
-        var buttons = document.querySelectorAll('.font-size-options button');
-        var selectedText = '字号';
+        // 更新按钮激活状态
+        var buttons = document.querySelectorAll('[data-action="font-size"]');
         
         for (var i = 0; i < buttons.length; i++) {
             var btn = buttons[i];
             var btnSize = parseInt(btn.getAttribute('data-size'), 10);
             if (btnSize === size) {
                 btn.className = 'active';
-                selectedText = btn.textContent;
             } else {
                 btn.className = '';
             }
         }
+    }
+    
+    /**
+     * 应用主题到页面
+     */
+    function applyTheme(theme) {
+        var body = document.body;
+        if (theme === 'dark') {
+            body.className = 'dark-mode';
+        } else {
+            body.className = '';
+        }
+        saveTheme(theme);
         
-        // 更新主按钮文字
-        if (toggleBtn) {
-            toggleBtn.textContent = selectedText;
+        // 更新按钮激活状态
+        var buttons = document.querySelectorAll('[data-action="theme"]');
+        
+        for (var i = 0; i < buttons.length; i++) {
+            var btn = buttons[i];
+            var btnTheme = btn.getAttribute('data-theme');
+            if (btnTheme === theme) {
+                btn.className = 'active';
+            } else {
+                btn.className = '';
+            }
         }
     }
     
     /**
-     * 初始化字号控制
+     * 初始化设置控制
      */
-    function initFontSizeControl() {
-        var toggleBtn = document.getElementById('font-size-toggle');
-        var optionsPanel = document.getElementById('font-size-options');
+    function initSettingsControl() {
+        var toggleBtn = document.getElementById('settings-toggle');
+        var optionsPanel = document.getElementById('settings-options');
         
         if (!toggleBtn || !optionsPanel) {
             return;
         }
         
-        // 读取保存的字号并应用
+        // 读取保存的设置并应用
         var savedSize = getSavedFontSize();
+        var savedTheme = getSavedTheme();
         applyFontSize(savedSize);
+        applyTheme(savedTheme);
         
         // 点击按钮切换显示/隐藏
         toggleBtn.addEventListener('click', function(e) {
@@ -95,10 +143,15 @@
         for (var i = 0; i < buttons.length; i++) {
             buttons[i].addEventListener('click', function(e) {
                 e.stopPropagation();
-                var size = parseInt(this.getAttribute('data-size'), 10);
-                applyFontSize(size);
-                // 隐藏面板
-                optionsPanel.className = 'font-size-options';
+                var action = this.getAttribute('data-action');
+                
+                if (action === 'font-size') {
+                    var size = parseInt(this.getAttribute('data-size'), 10);
+                    applyFontSize(size);
+                } else if (action === 'theme') {
+                    var theme = this.getAttribute('data-theme');
+                    applyTheme(theme);
+                }
             });
         }
         
@@ -110,9 +163,9 @@
     
     // 页面加载完成后初始化
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initFontSizeControl);
+        document.addEventListener('DOMContentLoaded', initSettingsControl);
     } else {
-        initFontSizeControl();
+        initSettingsControl();
     }
     
 })();

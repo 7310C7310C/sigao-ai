@@ -16,7 +16,17 @@ class BibleService {
    * 获取经卷的所有章节
    */
   static async getBookChapters(bookId) {
-    return await Verse.getChaptersByBook(bookId);
+    const chapters = await Verse.getChaptersByBook(bookId);
+    const book = await Book.findById(bookId);
+    
+    // 为每个章节添加书卷名
+    if (book && chapters.length > 0) {
+      chapters.forEach(function(c) {
+        c.book_name = book.name_cn;
+      });
+    }
+    
+    return chapters;
   }
 
   /**

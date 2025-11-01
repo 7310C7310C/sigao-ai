@@ -64,11 +64,12 @@ class ImportService {
    * 清空所有表
    */
   static async clearAllTables(conn) {
+    // 必须使用同一个连接来执行 TRUNCATE，否则 FOREIGN_KEY_CHECKS 设置无效
     await conn.query('SET FOREIGN_KEY_CHECKS=0');
-    await AIResponse.truncate();
-    await Verse.truncate();
-    await Book.truncate();
-    await Translation.truncate();
+    await conn.query('TRUNCATE TABLE ai_responses_cache');
+    await conn.query('TRUNCATE TABLE verses');
+    await conn.query('TRUNCATE TABLE books');
+    await conn.query('TRUNCATE TABLE translations');
     await conn.query('SET FOREIGN_KEY_CHECKS=1');
   }
 
