@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>经文</title>
+  </head>
+  <body>
+    <h1>第 <%= chapter %> 章</h1>
+    <ol>
+      <% verses.forEach(function(v){ %>
+        <li><strong><%= v.verse_ref ? v.verse_ref : '' %></strong> <%= v.text %></li>
+      <% }) %>
+    </ol>
+    <p><a href="/book/<%= bookId %>">返回章节列表</a></p>
+  </body>
+</html>

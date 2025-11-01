@@ -1,0 +1,44 @@
+services:
+  mysql:
+    image: mysql:8.0
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASS}"
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_USER: "${DB_USER}"
+      MYSQL_PASSWORD: "${DB_PASS}"
+    ports:
+      - "${DB_PORT}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: ["sh","-lc","npm install --no-audit --no-fund && node src/app.js"]
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - ADMIN_PASS=${ADMIN_PASS:-admin}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+volumes:
+  db_data:

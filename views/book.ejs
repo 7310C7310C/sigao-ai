@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>章节列表</title>
+  </head>
+  <body>
+    <h1>章节</h1>
+    <ul>
+      <% chapters.forEach(function(c){ %>
+        <li><a href="/book/<%= bookId %>/chapter/<%= c.chapter %>">第 <%= c.chapter %> 章</a></li>
+      <% }) %>
+    </ul>
+    <p><a href="/">返回书卷</a></p>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Admin - 导入圣经</title>
+  </head>
+  <body>
+    <h1>Admin — 导入 XLSX</h1>
+    <% if (message) { %>
+      <p><strong><%= message %></strong></p>
+    <% } %>
+    <form method="post" action="/admin/upload" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".xlsx,.xls,csv" required />
+      <button type="submit">上传并导入（会清空现有数据）</button>
+    </form>
+    <p><a href="/">返回网站首页</a></p>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files (keep example)
+.env
+.env.local
+.env.*
+!.env.example
+
+# Logs
+*.log
+app.log
+logs/
+
+# Temporary files
+tmp/
+*.tmp
+cache/
+
+# Build outputs
+dist/
+build/
+coverage/
+.nyc_output/
+
+# OS & editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Docker local overrides / local compose
+docker-compose.override.yml
+.docker/
+
+# Database / local data
+data/
+mysql_data/
+*.sqlite
+*.db
+
+# Keys / certs
+*.pem
+*.key
+
+# Misc
+*.log.*
