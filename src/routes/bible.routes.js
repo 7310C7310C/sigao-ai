@@ -6,6 +6,9 @@ const router = express.Router();
 // 首页 - 显示所有经卷
 router.get('/', BibleController.showIndex);
 
+// 搜索功能
+router.get('/search', BibleController.search);
+
 // 显示某经卷的章节
 router.get('/book/:bookId', BibleController.showBook);
 

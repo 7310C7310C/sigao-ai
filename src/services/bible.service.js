@@ -98,6 +98,32 @@ class BibleService {
 
     return { prev, next, currentBook: currentBook.name_cn, currentChapter: chapter };
   }
+
+  /**
+   * 搜索圣经内容
+   * @param {string} keyword - 搜索关键词
+   * @param {number} limit - 返回结果数量限制
+   * @returns {Object} - 包含匹配的书卷和经文
+   */
+  static async search(keyword, limit = 100) {
+    if (!keyword || keyword.trim().length === 0) {
+      return { books: [], verses: [] };
+    }
+
+    const trimmedKeyword = keyword.trim();
+
+    // 搜索匹配的书卷（书卷名包含关键词）
+    const books = await Book.searchByName(trimmedKeyword);
+
+    // 搜索匹配的经文（经文内容包含关键词）
+    const verses = await Verse.searchByText(trimmedKeyword, limit);
+
+    return {
+      books: books,
+      verses: verses,
+      keyword: trimmedKeyword
+    };
+  }
 }
 
 module.exports = BibleService;

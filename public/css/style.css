@@ -264,6 +264,180 @@ form {
 
 /* 导航链接 */
 
+/* 搜索框样式 */
+.search-container {
+    margin: 1.5rem 0 2rem;
+    position: relative;
+}
+
+.search-box {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    gap: 0.5rem;
+    -webkit-box-align: stretch;
+    -webkit-align-items: stretch;
+    -ms-flex-align: stretch;
+    align-items: stretch;
+}
+
+.search-input {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    -webkit-transition: border-color 0.2s ease;
+    transition: border-color 0.2s ease;
+    min-height: 48px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.search-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #fff;
+    background-color: #3498db;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    min-height: 48px;
+    min-width: 80px;
+    -webkit-transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease;
+}
+
+.search-btn:hover {
+    background-color: #2980b9;
+}
+
+.search-btn:active {
+    background-color: #21618c;
+}
+
+/* 搜索结果区域 */
+.search-results {
+    margin: 2rem 0;
+}
+
+.search-results h2 {
+    font-size: 1.25rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.search-results h3 {
+    font-size: 1.1rem;
+    color: #34495e;
+    margin: 1.5rem 0 0.75rem;
+}
+
+.search-results-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #7f8c8d;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin: 1rem 0;
+}
+
+/* 搜索结果 - 书卷列表 */
+.search-books-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.search-books-list li {
+    margin: 0;
+}
+
+.search-books-list a {
+    display: inline-block;
+    padding: 0.6rem 1rem;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-radius: 4px;
+    border: 1px solid #90caf9;
+    font-weight: 500;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+.search-books-list a:hover {
+    background-color: #1976d2;
+    color: white;
+    text-decoration: none;
+    -webkit-transform: translateY(-2px);
+    transform: translateY(-2px);
+    -webkit-box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+}
+
+/* 搜索结果 - 经文列表 */
+.search-verses-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.search-verses-list li {
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    background-color: #f8f9fa;
+    border-left: 3px solid #3498db;
+    border-radius: 0 4px 4px 0;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.search-verses-list li:hover {
+    background-color: #e8f4f8;
+    border-left-width: 5px;
+    -webkit-transform: translateX(3px);
+    transform: translateX(3px);
+}
+
+.search-verse-ref {
+    display: inline-block;
+    font-weight: 600;
+    color: #1976d2;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+}
+
+.search-verse-text {
+    color: #34495e;
+    line-height: 1.6;
+}
+
+.search-verse-text .highlight {
+    background-color: #fff9c4;
+    font-weight: 500;
+    padding: 0 0.2rem;
+    border-radius: 2px;
+}
+
 /* 经文列表样式 */
 .verse-list {
     list-style: none;
@@ -783,6 +957,74 @@ body.dark-mode .breadcrumb span {
 body.dark-mode .top-nav {
     border-top-color: #444;
     border-bottom-color: #444;
+}
+
+/* 搜索框夜间模式 */
+body.dark-mode .search-input {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+body.dark-mode .search-input:focus {
+    border-color: #64b5f6;
+}
+
+body.dark-mode .search-btn {
+    background: #1e5a8e;
+    color: #e0e0e0;
+}
+
+body.dark-mode .search-btn:hover {
+    background: #164a74;
+}
+
+body.dark-mode .search-btn:active {
+    background: #0d3a5a;
+}
+
+body.dark-mode .search-results h2,
+body.dark-mode .search-results h3 {
+    color: #d0d0d0;
+    border-bottom-color: #444;
+}
+
+body.dark-mode .search-results-empty {
+    background-color: #2d2d2d;
+    color: #a0a0a0;
+}
+
+body.dark-mode .search-books-list a {
+    background-color: #1a2f42;
+    color: #64b5f6;
+    border-color: #2d4a5f;
+}
+
+body.dark-mode .search-books-list a:hover {
+    background-color: #2d4a5f;
+    color: #90caf9;
+}
+
+body.dark-mode .search-verses-list li {
+    background-color: #2d2d2d;
+    border-left-color: #64b5f6;
+}
+
+body.dark-mode .search-verses-list li:hover {
+    background-color: #3a3a3a;
+}
+
+body.dark-mode .search-verse-ref {
+    color: #90caf9;
+}
+
+body.dark-mode .search-verse-text {
+    color: #c8c8c8;
+}
+
+body.dark-mode .search-verse-text .highlight {
+    background-color: #4a4a2a;
+    color: #fff9c4;
 }
 
 /* AI 按钮夜间模式 */
@@ -1382,6 +1624,55 @@ body.dark-mode .ai-error {
 
 /* 响应式布局 */
 @media screen and (max-width: 480px) {
+    /* 搜索框移动端适配 */
+    .search-box {
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .search-input {
+        width: 100%;
+        font-size: 0.95rem;
+    }
+    
+    .search-btn {
+        width: 100%;
+        min-width: 0;
+    }
+    
+    .search-results h2 {
+        font-size: 1.15rem;
+    }
+    
+    .search-results h3 {
+        font-size: 1rem;
+    }
+    
+    .search-books-list {
+        gap: 0.375rem;
+    }
+    
+    .search-books-list a {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .search-verses-list li {
+        padding: 0.65rem;
+    }
+    
+    .search-verse-ref {
+        font-size: 0.9rem;
+    }
+    
+    .search-verse-text {
+        font-size: 0.95rem;
+    }
+    
     .ai-buttons {
         gap: 0.25rem;
         padding: 0.5rem;

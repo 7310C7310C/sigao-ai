@@ -43,6 +43,17 @@ class Book {
   static async truncate() {
     await query('TRUNCATE TABLE books');
   }
+
+  /**
+   * 根据书卷名搜索
+   */
+  static async searchByName(keyword) {
+    const rows = await execute(
+      'SELECT id, code, name_cn, book_type, testament FROM books WHERE name_cn LIKE ? ORDER BY order_index',
+      [`%${keyword}%`]
+    );
+    return rows;
+  }
 }
 
 module.exports = Book;

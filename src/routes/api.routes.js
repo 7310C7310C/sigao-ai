@@ -81,6 +81,25 @@ router.get('/navigation', async (req, res, next) => {
 });
 
 /**
+ * GET /api/search
+ * 搜索圣经内容
+ * Query: q (关键词), limit (结果数量限制)
+ */
+router.get('/search', async (req, res, next) => {
+  try {
+    const keyword = req.query.q || '';
+    const limit = Number(req.query.limit) || 100;
+    const results = await BibleService.search(keyword, limit);
+    res.json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * POST /api/ai/generate
  * 生成 AI 辅助内容
  * Body: { function_type, book_id, chapter, lang }

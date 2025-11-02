@@ -42,6 +42,25 @@ class BibleController {
       next(error);
     }
   }
+
+  /**
+   * 搜索圣经内容
+   */
+  static async search(req, res, next) {
+    try {
+      const keyword = req.query.q || req.query.keyword || '';
+      const limit = Number(req.query.limit) || 100;
+      
+      const results = await BibleService.search(keyword, limit);
+      
+      res.json({
+        success: true,
+        data: results
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = BibleController;

@@ -59,6 +59,29 @@ class Verse {
   static async truncate() {
     await query('TRUNCATE TABLE verses');
   }
+
+  /**
+   * 根据文本内容搜索经文
+   */
+  static async searchByText(keyword, limit = 100) {
+    // 确保 limit 是安全的整数
+    const safeLimit = parseInt(limit) || 100;
+    if (safeLimit < 1 || safeLimit > 1000) {
+      throw new Error('Invalid limit value');
+    }
+    
+    const rows = await execute(
+      `SELECT v.id, v.book_id, v.chapter, v.verse_ref, v.text, v.line_index,
+              b.name_cn as book_name, b.testament
+       FROM verses v 
+       LEFT JOIN books b ON v.book_id = b.id 
+       WHERE v.text LIKE ? 
+       ORDER BY b.order_index, v.chapter, v.line_index
+       LIMIT ${safeLimit}`,
+      [`%${keyword}%`]
+    );
+    return rows;
+  }
 }
 
 module.exports = Verse;

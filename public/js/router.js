@@ -10,7 +10,8 @@
     var appState = {
         currentRoute: null,
         loading: false,
-        cache: {}
+        cache: {},
+        scrollToVerse: null // 用于保存需要滚动到的经文引用
     };
     
     /**
@@ -149,6 +150,14 @@
         
         var html = '<div class="container">';
         html += '<h1>📖 思高圣经</h1>';
+        
+        // 添加搜索框
+        html += '<div class="search-container">';
+        html += '<div class="search-box">';
+        html += '<input type="text" id="search-input" class="search-input" placeholder="搜索经文或书卷名..." aria-label="搜索">';
+        html += '<button id="search-btn" class="search-btn">搜索</button>';
+        html += '</div>';
+        html += '</div>';
         
         // 渲染新约
         if (testaments['新约'] && Object.keys(testaments['新约']).length > 0) {
@@ -356,6 +365,102 @@
     }
     
     /**
+     * 渲染搜索结果
+     */
+    function renderSearchResults(results, keyword) {
+        var html = '<div class="container">';
+        html += '<h1>🔍 搜索结果</h1>';
+        
+        // 搜索框
+        html += '<div class="search-container">';
+        html += '<div class="search-box">';
+        html += '<input type="text" id="search-input" class="search-input" placeholder="搜索经文或书卷名..." value="' + (keyword || '').replace(/"/g, '&quot;') + '" aria-label="搜索">';
+        html += '<button id="search-btn" class="search-btn">搜索</button>';
+        html += '</div>';
+        html += '</div>';
+        
+        if (!keyword || keyword.trim() === '') {
+            html += '<div class="search-results-empty">请输入搜索关键词</div>';
+            html += '<div class="nav-links"><a href="#/">返回首页</a></div>';
+            html += '</div>';
+            return html;
+        }
+        
+        var hasResults = (results.books && results.books.length > 0) || (results.verses && results.verses.length > 0);
+        
+        if (!hasResults) {
+            html += '<div class="search-results-empty">未找到包含 "' + keyword + '" 的结果</div>';
+            html += '<div class="nav-links"><a href="#/">返回首页</a></div>';
+            html += '</div>';
+            return html;
+        }
+        
+        html += '<div class="search-results">';
+        
+        // 显示匹配的书卷
+        if (results.books && results.books.length > 0) {
+            html += '<h3>📚 匹配的书卷 (' + results.books.length + ')</h3>';
+            html += '<ul class="search-books-list">';
+            for (var i = 0; i < results.books.length; i++) {
+                var book = results.books[i];
+                html += '<li>';
+                html += '<a href="#/book/' + book.id + '">';
+                html += book.name_cn;
+                if (book.book_type) {
+                    html += ' <span style="font-size: 0.85em; opacity: 0.7;">(' + book.book_type + ')</span>';
+                }
+                html += '</a>';
+                html += '</li>';
+            }
+            html += '</ul>';
+        }
+        
+        // 显示匹配的经文
+        if (results.verses && results.verses.length > 0) {
+            html += '<h3>📖 匹配的经文 (' + results.verses.length + ')</h3>';
+            html += '<ul class="search-verses-list">';
+            for (var i = 0; i < results.verses.length; i++) {
+                var verse = results.verses[i];
+                html += '<li data-book-id="' + verse.book_id + '" data-chapter="' + verse.chapter + '" data-verse-ref="' + (verse.verse_ref || '') + '">';
+                html += '<div class="search-verse-ref">';
+                html += verse.book_name + ' ' + verse.chapter;
+                if (verse.verse_ref) {
+                    html += ':' + verse.verse_ref;
+                }
+                html += '</div>';
+                html += '<div class="search-verse-text">';
+                // 高亮显示关键词
+                var text = verse.text || '';
+                var highlightedText = highlightKeyword(text, keyword);
+                html += highlightedText;
+                html += '</div>';
+                html += '</li>';
+            }
+            html += '</ul>';
+        }
+        
+        html += '</div>';
+        html += '<div class="nav-links"><a href="#/">返回首页</a></div>';
+        html += '</div>';
+        
+        return html;
+    }
+    
+    /**
+     * 高亮显示关键词
+     */
+    function highlightKeyword(text, keyword) {
+        if (!keyword || !text) {
+            return text;
+        }
+        
+        // 转义特殊字符
+        var escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        var regex = new RegExp('(' + escapedKeyword + ')', 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+    
+    /**
      * 路由处理
      */
     function handleRoute() {
@@ -398,8 +503,13 @@
         
         toggleLoading(true);
         
+        // 分离路径和查询参数
+        var pathParts = path.split('?');
+        var routePath = pathParts[0];
+        var queryString = pathParts[1] || '';
+        
         // 解析路由
-        var parts = path.split('/').filter(function(p) { return p; });
+        var parts = routePath.split('/').filter(function(p) { return p; });
         
         // 首页 - 书卷列表
         if (parts.length === 0) {
@@ -411,6 +521,45 @@
                     return;
                 }
                 container.innerHTML = renderBookList(response.data);
+                // 绑定搜索事件
+                bindSearchEvents();
+            });
+        }
+        // 搜索结果页
+        else if (parts.length === 1 && parts[0] === 'search') {
+            // 从查询参数获取搜索关键词
+            var keyword = '';
+            if (queryString) {
+                // 手动解析查询参数（兼容旧浏览器）
+                var params = queryString.split('&');
+                for (var i = 0; i < params.length; i++) {
+                    var param = params[i].split('=');
+                    if (param[0] === 'q' && param[1]) {
+                        keyword = decodeURIComponent(param[1]);
+                        break;
+                    }
+                }
+            }
+            
+            if (!keyword || keyword.trim() === '') {
+                toggleLoading(false);
+                container.innerHTML = renderSearchResults({ books: [], verses: [] }, '');
+                bindSearchEvents();
+                return;
+            }
+            
+            ajaxGet('/api/search?q=' + encodeURIComponent(keyword), function(err, response) {
+                toggleLoading(false);
+                if (err) {
+                    showError('搜索失败');
+                    container.innerHTML = '<div class="container"><p>搜索失败，请重试</p><a href="#/">返回首页</a></div>';
+                    return;
+                }
+                container.innerHTML = renderSearchResults(response.data, keyword);
+                // 绑定搜索事件
+                bindSearchEvents();
+                // 绑定经文点击事件
+                bindVerseClickEvents();
             });
         }
         // 章节列表
@@ -447,6 +596,9 @@
                         // 绑定 AI 按钮事件
                         initAIButtons();
                         
+                        // 检查是否需要滚动到特定经文（从搜索结果跳转过来）
+                        scrollToVerseIfNeeded();
+                        
                         // 页面渲染完成后预读上一章和下一章
                         setTimeout(function() {
                             preloadChapters(navData);
@@ -477,6 +629,104 @@
         else {
             toggleLoading(false);
             container.innerHTML = '<div class="container"><h1>404</h1><p>页面不存在</p><a href="#/">返回首页</a></div>';
+        }
+    }
+    
+    /**
+     * 绑定搜索事件
+     */
+    function bindSearchEvents() {
+        var searchInput = document.getElementById('search-input');
+        var searchBtn = document.getElementById('search-btn');
+        
+        if (!searchInput || !searchBtn) {
+            return;
+        }
+        
+        function performSearch() {
+            var keyword = searchInput.value.trim();
+            if (keyword) {
+                window.location.hash = '#/search?q=' + encodeURIComponent(keyword);
+            }
+        }
+        
+        // 点击搜索按钮
+        searchBtn.addEventListener('click', performSearch);
+        
+        // 回车键搜索
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.keyCode === 13 || e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+    }
+    
+    /**
+     * 绑定搜索结果中经文的点击事件
+     */
+    function bindVerseClickEvents() {
+        var verseItems = document.querySelectorAll('.search-verses-list li');
+        
+        for (var i = 0; i < verseItems.length; i++) {
+            verseItems[i].addEventListener('click', function() {
+                var bookId = this.getAttribute('data-book-id');
+                var chapter = this.getAttribute('data-chapter');
+                var verseRef = this.getAttribute('data-verse-ref');
+                
+                // 保存到全局状态，供页面加载后使用
+                appState.scrollToVerse = verseRef;
+                
+                // 跳转到对应章节
+                var hash = '#/book/' + bookId + '/chapter/' + chapter;
+                window.location.hash = hash;
+            });
+        }
+    }
+    
+    /**
+     * 滚动到指定经文并高亮
+     */
+    function scrollToVerseIfNeeded() {
+        if (appState.scrollToVerse !== null && appState.scrollToVerse !== undefined) {
+            var verseRef = appState.scrollToVerse;
+            appState.scrollToVerse = null; // 清除状态
+            
+            // 如果 verseRef 为空字符串或 'null'，不执行滚动
+            if (!verseRef || verseRef === '' || verseRef === 'null') {
+                return;
+            }
+            
+            // 尝试多次查找元素（因为可能还在渲染中）
+            var attempts = 0;
+            var maxAttempts = 15;
+            
+            var tryScroll = function() {
+                attempts++;
+                var verseEl = document.getElementById('verse-' + verseRef);
+                
+                if (verseEl) {
+                    // 找到元素，执行滚动和高亮
+                    setTimeout(function() {
+                        verseEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // 高亮显示该经文
+                        var isDarkMode = document.body.classList.contains('dark-mode');
+                        verseEl.style.backgroundColor = isDarkMode ? '#4a4a2a' : '#fff9c4';
+                        verseEl.style.transition = 'background-color 0.3s ease';
+                        
+                        setTimeout(function() {
+                            verseEl.style.backgroundColor = '';
+                        }, 2500);
+                    }, 50);
+                } else if (attempts < maxAttempts) {
+                    // 未找到，继续尝试
+                    setTimeout(tryScroll, 150);
+                }
+            };
+            
+            // 稍微延迟一下，确保 DOM 已经完全渲染
+            setTimeout(tryScroll, 200);
         }
     }
     
