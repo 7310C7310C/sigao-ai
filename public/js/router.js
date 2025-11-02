@@ -255,7 +255,7 @@
         
         var bookName = verses[0].book_name || '书卷';
         
-        var html = '<div class="container">';
+        var html = '<div class="container verse-page-container">';
         html += '<h1>' + bookName + ' 第 ' + chapter + ' 章</h1>';
         
         // 面包屑导航
@@ -308,9 +308,9 @@
         // AI 辅助功能区（固定在底部）
         html += '<div class="ai-features-fixed">';
         html += '<div id="ai-result" class="ai-result" style="display: none;">';
+        html += '<button id="ai-result-close" class="ai-close-btn">✕</button>';
         html += '<div class="ai-result-header">';
         html += '<h3 id="ai-result-title"></h3>';
-        html += '<button id="ai-result-close" class="ai-close-btn">✕</button>';
         html += '</div>';
         html += '<div id="ai-result-content" class="ai-result-content"></div>';
         html += '<div id="ai-result-loading" class="ai-loading" style="display: none;">';
@@ -320,10 +320,10 @@
         html += '<div id="ai-result-error" class="ai-error" style="display: none;"></div>';
         html += '</div>';
         html += '<div class="ai-buttons">';
-        html += '<button class="ai-btn" data-function="summary" data-book-id="' + bookId + '" data-chapter="' + chapter + '">📋 经文总结</button>';
-        html += '<button class="ai-btn" data-function="history" data-book-id="' + bookId + '" data-chapter="' + chapter + '">📜 历史背景</button>';
-        html += '<button class="ai-btn" data-function="saints" data-book-id="' + bookId + '" data-chapter="' + chapter + '">👼 圣人诠释</button>';
-        html += '<button class="ai-btn" data-function="prayer" data-book-id="' + bookId + '" data-chapter="' + chapter + '">🙏 祈祷指引</button>';
+        html += '<button class="ai-btn" data-function="summary" data-book-id="' + bookId + '" data-chapter="' + chapter + '">经文总结</button>';
+        html += '<button class="ai-btn" data-function="history" data-book-id="' + bookId + '" data-chapter="' + chapter + '">历史背景</button>';
+        html += '<button class="ai-btn" data-function="saints" data-book-id="' + bookId + '" data-chapter="' + chapter + '">圣人诠释</button>';
+        html += '<button class="ai-btn" data-function="prayer" data-book-id="' + bookId + '" data-chapter="' + chapter + '">祈祷指引</button>';
         html += '</div>';
         html += '</div>';
         
@@ -500,6 +500,49 @@
         
         // 初始加载
         handleRoute();
+        
+        // 添加全局键盘事件
+        document.addEventListener('keydown', function(e) {
+            var hash = window.location.hash;
+            
+            // ESC 键关闭 AI 内容区
+            if (e.keyCode === 27 || e.key === 'Escape') {
+                var aiResult = document.getElementById('ai-result');
+                if (aiResult && aiResult.style.display !== 'none') {
+                    aiResult.style.display = 'none';
+                    e.preventDefault();
+                }
+            }
+            
+            // 左右方向键切换章节（仅在章节页面）
+            if (hash.indexOf('#/book/') === 0) {
+                var match = hash.match(/#\/book\/(\d+)\/chapter\/(\d+)/);
+                if (match) {
+                    // 左键：上一章
+                    if (e.keyCode === 37 || e.key === 'ArrowLeft') {
+                        var navLinks = document.querySelectorAll('.nav-links a');
+                        for (var i = 0; i < navLinks.length; i++) {
+                            if (navLinks[i].textContent === '上一章' && !navLinks[i].classList.contains('disabled')) {
+                                e.preventDefault();
+                                window.location.hash = navLinks[i].getAttribute('href');
+                                break;
+                            }
+                        }
+                    }
+                    // 右键：下一章
+                    else if (e.keyCode === 39 || e.key === 'ArrowRight') {
+                        var navLinks = document.querySelectorAll('.nav-links a');
+                        for (var i = 0; i < navLinks.length; i++) {
+                            if (navLinks[i].textContent === '下一章' && !navLinks[i].classList.contains('disabled')) {
+                                e.preventDefault();
+                                window.location.hash = navLinks[i].getAttribute('href');
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
     
     /**
@@ -526,8 +569,30 @@
         // 当前激活的按钮
         var activeButton = null;
         
+        // 当前显示的 AI 内容信息
+        var currentAIInfo = {
+            functionType: null,
+            bookId: null,
+            chapter: null
+        };
+        
         // 内容缓存（内存缓存，刷新页面会丢失）
         var contentCache = {};
+        
+        // 重新生成 AI 内容（全局函数，供按钮调用）
+        window.regenerateAIContent = function() {
+            if (!currentAIInfo.functionType || !currentAIInfo.bookId || !currentAIInfo.chapter) {
+                showError('无法重新生成：缺少必要信息');
+                return;
+            }
+            
+            // 清除缓存
+            var cacheKey = currentAIInfo.bookId + '-' + currentAIInfo.chapter + '-' + currentAIInfo.functionType;
+            delete contentCache[cacheKey];
+            
+            // 强制重新生成
+            requestAI(currentAIInfo.functionType, currentAIInfo.bookId, currentAIInfo.chapter, cacheKey, true);
+        };
         
         // 关闭结果框
         if (closeBtn) {
@@ -564,6 +629,11 @@
                     this.classList.add('active');
                     activeButton = this;
                     
+                    // 保存当前信息（用于重新生成）
+                    currentAIInfo.functionType = functionType;
+                    currentAIInfo.bookId = bookId;
+                    currentAIInfo.chapter = chapter;
+                    
                     // 生成缓存键
                     var cacheKey = bookId + '-' + chapter + '-' + functionType;
                     
@@ -573,7 +643,7 @@
                         showCachedContent(functionType, contentCache[cacheKey]);
                     } else {
                         // 请求 AI 生成
-                        requestAI(functionType, bookId, chapter, cacheKey);
+                        requestAI(functionType, bookId, chapter, cacheKey, false);
                     }
                 }
             });
@@ -582,22 +652,132 @@
         function showCachedContent(functionType, content) {
             // 显示缓存内容（秒开）
             resultBox.style.display = 'block';
-            resultTitle.textContent = functionNames[functionType] + ' (缓存)';
+            resultTitle.textContent = functionNames[functionType];
             resultContent.innerHTML = formatAIResponse(content);
             resultContent.style.display = 'block';
             resultError.style.display = 'none';
             resultLoading.style.display = 'none';
+            
+            // 绑定引用链接的点击事件，阻止路由跳转
+            bindCitationLinks();
         }
         
-        function requestAI(functionType, bookId, chapter, cacheKey) {
+        function requestAI(functionType, bookId, chapter, cacheKey, forceRegenerate) {
             // 显示结果框和加载状态
             resultBox.style.display = 'block';
-            resultTitle.textContent = functionNames[functionType];
+            resultTitle.textContent = functionNames[functionType] + (forceRegenerate ? ' (重新生成中...)' : '');
             resultContent.style.display = 'none';
             resultError.style.display = 'none';
             resultLoading.style.display = 'block';
             
-            // 发送请求
+            // 使用流式响应（Server-Sent Events）
+            var url = '/api/ai/generate-stream?function_type=' + encodeURIComponent(functionType) +
+                      '&book_id=' + encodeURIComponent(bookId) +
+                      '&chapter=' + encodeURIComponent(chapter) +
+                      '&lang=zh' +
+                      '&force_regenerate=' + (forceRegenerate ? 'true' : 'false');
+            
+            // 检查浏览器是否支持 EventSource
+            if (typeof EventSource === 'undefined') {
+                // 降级到非流式请求
+                fallbackToNonStreaming(functionType, bookId, chapter, cacheKey, forceRegenerate);
+                return;
+            }
+            
+            var eventSource = new EventSource(url);
+            var accumulatedContent = '';
+            var citations = [];
+            var contentReceived = false;
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    var data = JSON.parse(event.data);
+                    
+                    if (data.type === 'connected') {
+                        // 收到连接确认，隐藏加载动画，显示"正在连接"
+                        resultLoading.style.display = 'none';
+                        resultContent.style.display = 'block';
+                        resultContent.innerHTML = '<p style="color: #666; font-style: italic;">⚡ 已连接，等待响应...</p>';
+                        
+                    } else if (data.type === 'connecting') {
+                        // API 连接中
+                        resultContent.innerHTML = '<p style="color: #666; font-style: italic;">🔄 ' + data.message + '</p>';
+                        
+                    } else if (data.type === 'heartbeat') {
+                        // 心跳消息 - 让用户知道系统还在工作
+                        var elapsed = data.elapsed || 0;
+                        var dots = '.'.repeat((elapsed / 3) % 4);
+                        resultContent.innerHTML = '<p style="color: #666; font-style: italic;">⏳ ' + data.message + dots + '</p>' +
+                                                '<p style="color: #999; font-size: 0.85rem; margin-top: 0.5rem;">已等待 ' + elapsed + ' 秒</p>';
+                        
+                    } else if (data.type === 'chunk') {
+                        // 接收到内容片段
+                        accumulatedContent += data.content;
+                        
+                        // 首次收到内容时，隐藏加载/心跳提示，直接显示内容
+                        if (!contentReceived) {
+                            contentReceived = true;
+                            resultLoading.style.display = 'none';
+                            resultContent.style.display = 'block';
+                        }
+                        
+                        // 直接实时渲染累积的内容（无打字机效果）
+                        resultContent.innerHTML = formatAIResponse({
+                            content: accumulatedContent,
+                            citations: []
+                        });
+                        
+                        // 自动滚动到底部
+                        resultContent.scrollTop = resultContent.scrollHeight;
+                        
+                    } else if (data.type === 'done') {
+                        // 生成完成
+                        citations = data.citations || [];
+                        
+                        // 保存完整响应到缓存
+                        var fullData = {
+                            content: accumulatedContent,
+                            citations: citations
+                        };
+                        contentCache[cacheKey] = fullData;
+                        
+                        // 最终渲染（包含引用列表）
+                        resultContent.innerHTML = formatAIResponse(fullData);
+                        resultContent.style.display = 'block';
+                        
+                        // 绑定引用链接
+                        bindCitationLinks();
+                        
+                        // 关闭连接
+                        eventSource.close();
+                        
+                        // 更新标题（移除"生成中"提示）
+                        if (data.cached) {
+                            resultTitle.textContent = functionNames[functionType] + ' (已缓存)';
+                        } else {
+                            resultTitle.textContent = functionNames[functionType];
+                        }
+                        
+                    } else if (data.type === 'error') {
+                        // 错误处理
+                        showError(data.message || 'AI 生成失败');
+                        eventSource.close();
+                    }
+                } catch (e) {
+                    showError('解析响应失败：' + e.message);
+                    eventSource.close();
+                }
+            };
+            
+            eventSource.onerror = function(err) {
+                resultLoading.style.display = 'none';
+                showError('连接中断，请重试');
+                eventSource.close();
+            };
+        }
+        
+        // 降级方案：不支持 EventSource 时使用原有的 POST 请求
+        function fallbackToNonStreaming(functionType, bookId, chapter, cacheKey, forceRegenerate) {
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/api/ai/generate', true);
             xhr.setRequestHeader('Content-Type', 'application/json');
@@ -610,12 +790,10 @@
                         try {
                             var data = JSON.parse(xhr.responseText);
                             if (data.success && data.data && data.data.content) {
-                                // 保存到缓存
-                                contentCache[cacheKey] = data.data.content;
-                                
-                                // 显示内容
-                                resultContent.innerHTML = formatAIResponse(data.data.content);
+                                contentCache[cacheKey] = data.data;
+                                resultContent.innerHTML = formatAIResponse(data.data);
                                 resultContent.style.display = 'block';
+                                bindCitationLinks();
                             } else {
                                 showError(data.message || '生成失败');
                             }
@@ -642,7 +820,8 @@
                 function_type: functionType,
                 book_id: parseInt(bookId),
                 chapter: parseInt(chapter),
-                lang: 'zh'
+                lang: 'zh',
+                force_regenerate: forceRegenerate === true
             }));
         }
         
@@ -651,25 +830,94 @@
             resultError.style.display = 'block';
         }
         
-        function formatAIResponse(content) {
-            // 使用 marked.js 解析 Markdown（成熟的库）
+        function bindCitationLinks() {
+            // 绑定引用链接，阻止 hash 路由跳转，使用平滑滚动
+            var refLinks = resultContent.querySelectorAll('a[href^="#ref-"], a[href^="#refback-"]');
+            for (var i = 0; i < refLinks.length; i++) {
+                refLinks[i].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    var targetId = this.getAttribute('href').substring(1); // 移除 #
+                    var targetEl = document.getElementById(targetId);
+                    
+                    if (targetEl) {
+                        // 在 AI 结果区内平滑滚动
+                        targetEl.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }
+                });
+            }
+        }
+        
+        function formatAIResponse(data) {
+            var html = '';
+            
+            // 兼容旧格式（字符串）和新格式（对象）
+            var content = typeof data === 'string' ? data : data.content;
+            var citations = (typeof data === 'object' && data.citations) ? data.citations : [];
+            
+            // 使用 marked.js 解析 Markdown
             if (typeof marked !== 'undefined') {
                 try {
-                    // 配置 marked 选项
                     marked.setOptions({
-                        breaks: true,        // 支持 GitHub 风格的换行
-                        gfm: true,           // 启用 GitHub Flavored Markdown
-                        headerIds: false,    // 不生成 header id
-                        mangle: false        // 不混淆邮箱
+                        breaks: true,
+                        gfm: true,
+                        headerIds: false,
+                        mangle: false
                     });
-                    return marked.parse(content);
+                    
+                    // 解析主要内容
+                    html = marked.parse(content);
+                    
+                    // 处理引用上标 [^1] -> <sup><a>
+                    html = html.replace(/\[\^(\d+)\]/g, function(match, num) {
+                        return '<sup class="ref-link"><a href="#ref-' + num + '" id="refback-' + num + '">[' + num + ']</a></sup>';
+                    });
+                    
+                    // 如果有 citations 数组，生成引用列表
+                    if (citations && citations.length > 0) {
+                        html += '<div class="references"><h4>📚 引用资料</h4><ol>';
+                        for (var i = 0; i < citations.length; i++) {
+                            var citation = citations[i];
+                            var refNum = i + 1;
+                            var refText = '';
+                            
+                            // 构建引用文本
+                            if (citation.document_title) {
+                                refText += '<strong>' + citation.document_title + '</strong>';
+                            }
+                            if (citation.document_reference) {
+                                refText += ' ' + citation.document_reference;
+                            }
+                            if (citation.document_author) {
+                                refText += ' - ' + citation.document_author;
+                            }
+                            if (citation.document_year && citation.document_year !== '0') {
+                                refText += ' (' + citation.document_year + ')';
+                            }
+                            if (citation.source_url) {
+                                refText += ' <a href="' + citation.source_url + '" target="_blank" rel="noopener" class="source-link">🔗 原文链接</a>';
+                            }
+                            
+                            html += '<li id="ref-' + refNum + '">' + refText + '</li>';
+                        }
+                        html += '</ol></div>';
+                        
+                        // 添加重新生成按钮
+                        html += '<div class="ai-regenerate-container">';
+                        html += '<button class="ai-regenerate-btn" onclick="regenerateAIContent()">重新生成新回答</button>';
+                        html += '</div>';
+                    }
+                    
+                    return html;
                 } catch (e) {
                     console.error('Markdown 解析失败:', e);
-                    // 降级：返回纯文本
                     return '<p>' + content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
                 }
             } else {
-                // marked.js 未加载，降级处理
                 console.warn('marked.js 未加载，使用简单格式化');
                 return '<p>' + content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
             }

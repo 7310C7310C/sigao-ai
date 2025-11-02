@@ -8,7 +8,7 @@ class Verse {
    * 根据经卷和章节获取经文
    */
   static async findByBookAndChapter(bookId, chapter) {
-    const [rows] = await execute(
+    const rows = await execute(
       `SELECT v.*, b.name_cn as book_name 
        FROM verses v 
        LEFT JOIN books b ON v.book_id = b.id 
@@ -23,7 +23,7 @@ class Verse {
    * 获取某经卷的所有章节
    */
   static async getChaptersByBook(bookId) {
-    const [rows] = await execute(
+    const rows = await execute(
       'SELECT DISTINCT chapter FROM verses WHERE book_id = ? ORDER BY chapter',
       [bookId]
     );
@@ -46,7 +46,7 @@ class Verse {
       original_row 
     } = verseData;
 
-    const [result] = await execute(
+    const result = await execute(
       'INSERT INTO verses (translation_id, book_id, chapter, verse_ref, line_index, type, text, content_hash, original_row) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [translation_id, book_id, chapter, verse_ref, line_index, type, text, content_hash, original_row]
     );

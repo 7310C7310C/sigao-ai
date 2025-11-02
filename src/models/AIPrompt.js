@@ -11,11 +11,10 @@ class AIPrompt {
    */
   static async getSystemPrompt(lang) {
     if (!lang) lang = 'zh';
-    var result = await query(
+    var rows = await query(
       'SELECT * FROM ai_prompts WHERE prompt_type = ? AND lang = ? AND is_active = 1 ORDER BY order_index ASC LIMIT 1',
       ['system', lang]
     );
-    var rows = result[0]; // mysql2 returns [rows, fields]
     return rows[0] || null;
   }
 
@@ -27,11 +26,10 @@ class AIPrompt {
    */
   static async getFunctionPrompt(functionType, lang) {
     if (!lang) lang = 'zh';
-    var result = await query(
+    var rows = await query(
       'SELECT * FROM ai_prompts WHERE prompt_type = ? AND function_type = ? AND lang = ? AND is_active = 1 LIMIT 1',
       ['function', functionType, lang]
     );
-    var rows = result[0]; // mysql2 returns [rows, fields]
     return rows[0] || null;
   }
 
@@ -42,11 +40,11 @@ class AIPrompt {
    */
   static async getActiveFunctions(lang) {
     if (!lang) lang = 'zh';
-    var result = await query(
+    var rows = await query(
       'SELECT function_type, prompt_name FROM ai_prompts WHERE prompt_type = ? AND lang = ? AND is_active = 1 ORDER BY order_index ASC',
       ['function', lang]
     );
-    return result[0]; // mysql2 returns [rows, fields]
+    return rows;
   }
 
     /**
@@ -103,8 +101,8 @@ class AIPrompt {
    * @returns {Promise<Array>}
    */
   static async getAll() {
-    var result = await query('SELECT * FROM ai_prompts ORDER BY prompt_type DESC, order_index ASC');
-    return result[0]; // mysql2 returns [rows, fields]
+    var rows = await query('SELECT * FROM ai_prompts ORDER BY prompt_type DESC, order_index ASC');
+    return rows;
   }
 
   /**
@@ -113,8 +111,7 @@ class AIPrompt {
    * @returns {Promise<Object|null>}
    */
   static async getById(id) {
-    var result = await query('SELECT * FROM ai_prompts WHERE id = ?', [id]);
-    var rows = result[0]; // mysql2 returns [rows, fields]
+    var rows = await query('SELECT * FROM ai_prompts WHERE id = ?', [id]);
     return rows[0] || null;
   }
 

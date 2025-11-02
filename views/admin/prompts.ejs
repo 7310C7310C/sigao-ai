@@ -62,45 +62,100 @@
         }
         
         .prompt-actions {
-            margin-top: 0.75rem;
+            margin: 0;
             display: -webkit-box;
             display: -webkit-flex;
             display: -ms-flexbox;
             display: flex;
-            -webkit-flex-wrap: wrap;
-            -ms-flex-wrap: wrap;
-            flex-wrap: wrap;
+            -webkit-flex-wrap: nowrap;
+            -ms-flex-wrap: nowrap;
+            flex-wrap: nowrap;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
             gap: 0.5rem;
+            -webkit-flex-shrink: 0;
+            -ms-flex-negative: 0;
+            flex-shrink: 0;
         }
         
+        /* form 标签也要在同一行 */
+        .prompt-actions form {
+            margin: 0;
+            padding: 0;
+            display: inline-block;
+        }
+        
+        /* 统一按钮基础样式 - 完全重置所有默认样式 */
         .prompt-actions button,
         .prompt-actions a {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.9rem;
-            border-radius: 4px;
+            /* 重置所有浏览器默认样式 */
+            all: unset;
+            
+            /* 布局 */
+            display: inline-flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            width: 60px;
+            height: 32px;
+            
+            /* 文字 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            font-size: 0.875rem;
+            text-align: center;
             text-decoration: none;
+            color: white;
+            font-weight: 400;
+            
+            /* 边框和背景 */
             border: none;
+            border-radius: 4px;
+            background: #3498db;
+            
+            /* 交互 */
             cursor: pointer;
-            -webkit-transition: all 0.2s ease;
-            transition: all 0.2s ease;
+            -webkit-transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease;
+            
+            /* 盒模型 */
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            
+            /* 防止文字选中 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         
+        /* 编辑按钮 */
         .btn-edit {
             background: #3498db;
-            color: white;
         }
         
         .btn-edit:hover {
             background: #2980b9;
         }
         
+        /* 切换按钮（启用/停用） */
         .btn-toggle {
             background: #95a5a6;
-            color: white;
         }
         
         .btn-toggle:hover {
             background: #7f8c8d;
+        }
+        
+        /* 移除 a 标签的默认样式 */
+        .prompt-actions a:visited {
+            color: white;
         }
         
         .badge {
@@ -161,18 +216,16 @@
         <!-- 功能导航 -->
         <div class="admin-nav-grid">
             <a href="/admin/prompts" class="admin-nav-btn active">
-                <span class="admin-nav-icon">🤖</span>
                 <span class="admin-nav-label">提示词管理</span>
             </a>
             <a href="/admin" class="admin-nav-btn">
-                <span class="admin-nav-icon">📤</span>
                 <span class="admin-nav-label">圣经导入</span>
             </a>
         </div>
         
         <!-- System Prompts -->
         <div class="prompts-section">
-            <h2>🌐 系统预设提示词（全局生效）</h2>
+            <h2>系统预设提示词（全局生效）</h2>
             <p style="color: #7f8c8d; font-size: 0.9rem;">
                 系统提示词定义 AI 的身份和基本原则，对所有对话生效。
             </p>
@@ -187,21 +240,20 @@
                                 <%= prompt.prompt_name %>
                                 <span class="badge badge-system">系统</span>
                                 <span class="badge <%= prompt.is_active ? 'badge-active' : 'badge-inactive' %>">
-                                    <%= prompt.is_active ? '✅ 启用' : '❌ 停用' %>
+                                    <%= prompt.is_active ? '启用' : '停用' %>
                                 </span>
                             </span>
+                            <div class="prompt-actions">
+                                <a href="/admin/prompts/edit/<%= prompt.id %>" class="btn-edit">编辑</a>
+                                <form method="post" action="/admin/prompts/toggle/<%= prompt.id %>" style="display: inline;">
+                                    <button type="submit" class="btn-toggle">
+                                        <%= prompt.is_active ? '停用' : '启用' %>
+                                    </button>
+                                </form>
+                            </div>
                         </h3>
                         
                         <div class="prompt-template"><%= prompt.prompt_template %></div>
-                        
-                        <div class="prompt-actions">
-                            <a href="/admin/prompts/edit/<%= prompt.id %>" class="btn-edit">✏️ 编辑</a>
-                            <form method="post" action="/admin/prompts/toggle/<%= prompt.id %>" style="display: inline;">
-                                <button type="submit" class="btn-toggle">
-                                    <%= prompt.is_active ? '🔴 停用' : '✅ 启用' %>
-                                </button>
-                            </form>
-                        </div>
                     </div>
                 <% }); %>
             <% } %>
@@ -209,7 +261,7 @@
         
         <!-- Function Prompts -->
         <div class="prompts-section">
-            <h2>⚙️ 功能提示词（具体任务）</h2>
+            <h2>功能提示词（具体任务）</h2>
             <p style="color: #7f8c8d; font-size: 0.9rem;">
                 功能提示词用于特定任务（经文总结、历史背景等），会附加在系统提示词之后。
             </p>
@@ -224,21 +276,20 @@
                                 <%= prompt.prompt_name %>
                                 <span class="badge badge-function"><%= prompt.function_type %></span>
                                 <span class="badge <%= prompt.is_active ? 'badge-active' : 'badge-inactive' %>">
-                                    <%= prompt.is_active ? '✅ 启用' : '❌ 停用' %>
+                                    <%= prompt.is_active ? '启用' : '停用' %>
                                 </span>
                             </span>
+                            <div class="prompt-actions">
+                                <a href="/admin/prompts/edit/<%= prompt.id %>" class="btn-edit">编辑</a>
+                                <form method="post" action="/admin/prompts/toggle/<%= prompt.id %>" style="display: inline;">
+                                    <button type="submit" class="btn-toggle">
+                                        <%= prompt.is_active ? '停用' : '启用' %>
+                                    </button>
+                                </form>
+                            </div>
                         </h3>
                         
                         <div class="prompt-template"><%= prompt.prompt_template %></div>
-                        
-                        <div class="prompt-actions">
-                            <a href="/admin/prompts/edit/<%= prompt.id %>" class="btn-edit">✏️ 编辑</a>
-                            <form method="post" action="/admin/prompts/toggle/<%= prompt.id %>" style="display: inline;">
-                                <button type="submit" class="btn-toggle">
-                                    <%= prompt.is_active ? '🔴 停用' : '✅ 启用' %>
-                                </button>
-                            </form>
-                        </div>
                     </div>
                 <% }); %>
             <% } %>

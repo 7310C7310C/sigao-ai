@@ -7,7 +7,13 @@ module.exports = {
   password: process.env.DB_PASS || 'sigao',
   database: process.env.DB_NAME || 'sigao_ai',
   charset: 'utf8mb4',
+  collation: 'utf8mb4_unicode_ci',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  // 连接选项
+  connectionOptions: {
+    charset: 'utf8mb4',
+    sql_mode: 'TRADITIONAL'
+  }
 };

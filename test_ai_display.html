@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>AI 结果显示测试</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div id="test-container" style="padding: 20px;">
+        <h1>AI 结果显示测试</h1>
+        <p>测试项：</p>
+        <ul>
+            <li>✅ X 关闭按钮可见性（右上角半透明圆形按钮）</li>
+            <li>✅ 点击引用上标跳转到引用列表</li>
+            <li>✅ 点击 ↩ 返回正文</li>
+            <li>✅ 关闭后重新打开秒加载（缓存）</li>
+            <li>✅ 返回顶部按钮在 AI 区打开时控制 AI 区滚动</li>
+        </ul>
+        <button id="test-btn" style="padding: 10px 20px; font-size: 16px;">测试 AI 结果显示</button>
+        <button id="toggle-dark" style="padding: 10px 20px; font-size: 16px; margin-left: 10px;">切换夜间模式</button>
+    </div>
+
+    <!-- AI 结果区 -->
+    <div id="ai-result" class="ai-result" style="display: none;">
+        <button id="ai-result-close" class="ai-close-btn">✕</button>
+        <div class="ai-result-header">
+            <h3 id="ai-result-title"></h3>
+        </div>
+        <div id="ai-result-content" class="ai-result-content"></div>
+    </div>
+
+    <script>
+        // 模拟 AI 返回数据
+        var mockData = {
+            content: "好的，以下是根据您提供的《玛窦福音》第一章经文（1:1-25）所作的总结[^1] [^6]。\n\n## 耶稣基督的族谱与诞生叙事总结\n\n这段经文主要包含两个核心部分：耶稣基督的族谱（1:1-17）和祂的奇妙诞生（1:18-25）[^1]。\n\n### 一、 耶稣基督的族谱 (1:1-17)\n\n《玛窦福音》以耶稣基督的族谱开篇，强调祂是"亚巴郎之子，达味之子"[^1]。族谱的目的是通过若瑟的合法父亲身份，确立耶稣是亚巴郎和达味的后裔[^4] [^5]。\n\n### 二、 耶稣基督的诞生叙事 (1:18-25)\n\n这段经文详细描述了耶稣诞生的特殊情况，重点在于若瑟如何面对玛利亚因圣神而怀孕的事实[^1] [^2]。",
+            citations: [
+                {
+                    document_title: "The Holy Bible",
+                    document_author: "The New Revised Standard Version, Catholic Edition (NRSV-CE)",
+                    document_reference: "Matthew 1:1-25",
+                    document_year: "1993",
+                    source_url: "https://www.magisterium.com/docs/7ab6e175-afab-4262-915a-0e98ce0d133d/ref/Matthew%201:1-25"
+                },
+                {
+                    document_title: "General Audience of 28 January 1987",
+                    document_author: "Pope John Paul II",
+                    document_reference: "",
+                    document_year: "1987",
+                    source_url: "https://www.magisterium.com/docs/d0765823-d0a0-4e52-b9b0-baa26fbba0b9/ref/"
+                }
+            ]
+        };
+
+        function formatAIResponse(data) {
+            var html = '';
+            var content = typeof data === 'string' ? data : data.content;
+            var citations = (typeof data === 'object' && data.citations) ? data.citations : [];
+            
+            if (typeof marked !== 'undefined') {
+                try {
+                    marked.setOptions({
+                        breaks: true,
+                        gfm: true,
+                        headerIds: false,
+                        mangle: false
+                    });
+                    
+                    html = marked.parse(content);
+                    
+                    html = html.replace(/\[\^(\d+)\]/g, function(match, num) {
+                        return '<sup class="ref-link"><a href="#ref-' + num + '" id="refback-' + num + '">[' + num + ']</a></sup>';
+                    });
+                    
+                    if (citations && citations.length > 0) {
+                        html += '<div class="references"><h4>📚 引用资料</h4><ol>';
+                        for (var i = 0; i < citations.length; i++) {
+                            var citation = citations[i];
+                            var refNum = i + 1;
+                            var refText = '';
+                            
+                            if (citation.document_title) {
+                                refText += '<strong>' + citation.document_title + '</strong>';
+                            }
+                            if (citation.document_reference) {
+                                refText += ' ' + citation.document_reference;
+                            }
+                            if (citation.document_author) {
+                                refText += ' - ' + citation.document_author;
+                            }
+                            if (citation.document_year && citation.document_year !== '0') {
+                                refText += ' (' + citation.document_year + ')';
+                            }
+                            if (citation.source_url) {
+                                refText += ' <a href="' + citation.source_url + '" target="_blank" rel="noopener" class="source-link">🔗 查看原文</a>';
+                            }
+                            
+                            html += '<li id="ref-' + refNum + '">' + refText + ' <a href="#refback-' + refNum + '" class="back-ref">↩</a></li>';
+                        }
+                        html += '</ol></div>';
+                    }
+                    
+                    return html;
+                } catch (e) {
+                    console.error('Markdown 解析失败:', e);
+                    return '<p>' + content + '</p>';
+                }
+            }
+            return '<p>' + content + '</p>';
+        }
+
+        document.getElementById('test-btn').addEventListener('click', function() {
+            var resultBox = document.getElementById('ai-result');
+            var resultContent = document.getElementById('ai-result-content');
+            
+            resultContent.innerHTML = formatAIResponse(mockData);
+            resultBox.style.display = 'block';
+        });
+
+        document.getElementById('ai-result-close').addEventListener('click', function() {
+            document.getElementById('ai-result').style.display = 'none';
+        });
+
+        document.getElementById('toggle-dark').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+        });
+    </script>
+</body>
+</html>

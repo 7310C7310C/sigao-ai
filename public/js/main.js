@@ -64,24 +64,41 @@
             'opacity: 0;' +
             'visibility: hidden;' +
             'transition: opacity 0.3s, visibility 0.3s;' +
-            'z-index: 1000;' +
+            'z-index: 10001;' +
             'box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
         
         document.body.appendChild(button);
         
         // 显示/隐藏按钮
         function toggleButton() {
-            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            if (scrollTop > 300) {
-                button.style.opacity = '1';
-                button.style.visibility = 'visible';
+            // 检查 AI 结果区是否打开
+            var aiResult = document.getElementById('ai-result');
+            var isAIOpen = aiResult && aiResult.style.display !== 'none';
+            
+            if (isAIOpen) {
+                // AI 结果区打开时，监听 AI 区的滚动
+                var aiScrollTop = aiResult.scrollTop;
+                if (aiScrollTop > 300) {
+                    button.style.opacity = '1';
+                    button.style.visibility = 'visible';
+                } else {
+                    button.style.opacity = '0';
+                    button.style.visibility = 'hidden';
+                }
             } else {
-                button.style.opacity = '0';
-                button.style.visibility = 'hidden';
+                // AI 结果区关闭时，监听页面滚动
+                var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                if (scrollTop > 300) {
+                    button.style.opacity = '1';
+                    button.style.visibility = 'visible';
+                } else {
+                    button.style.opacity = '0';
+                    button.style.visibility = 'hidden';
+                }
             }
         }
         
-        // 监听滚动事件（带节流）
+        // 监听页面滚动事件（带节流）
         var scrollTimeout;
         window.addEventListener('scroll', function() {
             if (scrollTimeout) {
@@ -90,8 +107,54 @@
             scrollTimeout = setTimeout(toggleButton, 100);
         });
         
+        // 监听 AI 结果区的滚动（通过事件委托）
+        document.addEventListener('scroll', function(e) {
+            if (e.target.id === 'ai-result') {
+                if (scrollTimeout) {
+                    clearTimeout(scrollTimeout);
+                }
+                scrollTimeout = setTimeout(toggleButton, 100);
+            }
+        }, true);
+        
         // 点击返回顶部
-        button.addEventListener('click', smoothScrollToTop);
+        button.addEventListener('click', function() {
+            // 检查 AI 结果区是否打开
+            var aiResult = document.getElementById('ai-result');
+            var isAIOpen = aiResult && aiResult.style.display !== 'none';
+            
+            if (isAIOpen) {
+                // AI 结果区打开时，滚动 AI 区
+                smoothScrollToTopElement(aiResult);
+            } else {
+                // AI 结果区关闭时，滚动页面
+                smoothScrollToTop();
+            }
+        });
+        
+        // 初始检查
+        toggleButton();
+    }
+    
+    /**
+     * 平滑滚动指定元素到顶部
+     */
+    function smoothScrollToTopElement(element) {
+        var currentScroll = element.scrollTop;
+        if (currentScroll > 0) {
+            if ('scrollBehavior' in document.documentElement.style) {
+                element.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                var smoothScrollStep = function() {
+                    currentScroll = element.scrollTop;
+                    if (currentScroll > 0) {
+                        window.requestAnimationFrame(smoothScrollStep);
+                        element.scrollTop = currentScroll - (currentScroll / 8);
+                    }
+                };
+                window.requestAnimationFrame(smoothScrollStep);
+            }
+        }
     }
     
     /**

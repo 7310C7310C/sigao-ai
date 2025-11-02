@@ -87,4 +87,11 @@ router.get('/navigation', async (req, res, next) => {
  */
 router.post('/ai/generate', AIController.generateContent);
 
+/**
+ * GET /api/ai/generate-stream
+ * 生成 AI 辅助内容（流式响应）
+ * Query: function_type, book_id, chapter, lang, force_regenerate
+ */
+router.get('/ai/generate-stream', AIController.generateContentStream);
+
 module.exports = router;

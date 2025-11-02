@@ -1,4 +1,8 @@
 -- AI 提示词配置表
+-- 设置客户端字符集为 UTF-8
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 USE sigao_ai;
 
 CREATE TABLE IF NOT EXISTS ai_prompts (

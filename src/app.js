@@ -14,12 +14,17 @@ app.set('views', path.join(__dirname, '..', 'views'));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // 请求体解析
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ charset: 'utf-8' }));
+app.use(express.urlencoded({ extended: true, charset: 'utf-8' }));
 
 // 设置响应字符集
 app.use(function(req, res, next) {
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  // 为所有响应设置 charset
+  var originalJson = res.json;
+  res.json = function(data) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    return originalJson.call(this, data);
+  };
   next();
 });
 

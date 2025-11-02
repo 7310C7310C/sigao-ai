@@ -8,7 +8,7 @@ class Translation {
    * 获取所有译本
    */
   static async findAll() {
-    const [rows] = await query('SELECT * FROM translations');
+    const rows = await query('SELECT * FROM translations');
     return rows;
   }
 
@@ -16,7 +16,7 @@ class Translation {
    * 根据 ID 获取译本
    */
   static async findById(id) {
-    const [rows] = await execute(
+    const rows = await execute(
       'SELECT * FROM translations WHERE id = ?',
       [id]
     );
@@ -27,7 +27,7 @@ class Translation {
    * 根据代码获取译本
    */
   static async findByCode(code) {
-    const [rows] = await execute(
+    const rows = await execute(
       'SELECT * FROM translations WHERE code = ?',
       [code]
     );
@@ -38,7 +38,7 @@ class Translation {
    * 创建译本
    */
   static async create(code, name, lang) {
-    const [result] = await execute(
+    const result = await execute(
       'INSERT INTO translations (code, name, lang) VALUES (?, ?, ?)',
       [code, name, lang]
     );
