@@ -17,6 +17,12 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 设置响应字符集
+app.use(function(req, res, next) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  next();
+});
+
 // 日志中间件
 app.use(requestLogger);
 

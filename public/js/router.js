@@ -305,6 +305,28 @@
         
         html += '</div>';
         
+        // AI 辅助功能区（固定在底部）
+        html += '<div class="ai-features-fixed">';
+        html += '<div id="ai-result" class="ai-result" style="display: none;">';
+        html += '<div class="ai-result-header">';
+        html += '<h3 id="ai-result-title"></h3>';
+        html += '<button id="ai-result-close" class="ai-close-btn">✕</button>';
+        html += '</div>';
+        html += '<div id="ai-result-content" class="ai-result-content"></div>';
+        html += '<div id="ai-result-loading" class="ai-loading" style="display: none;">';
+        html += '<div class="spinner"></div>';
+        html += '<p>正在生成内容...</p>';
+        html += '</div>';
+        html += '<div id="ai-result-error" class="ai-error" style="display: none;"></div>';
+        html += '</div>';
+        html += '<div class="ai-buttons">';
+        html += '<button class="ai-btn" data-function="summary" data-book-id="' + bookId + '" data-chapter="' + chapter + '">📋 经文总结</button>';
+        html += '<button class="ai-btn" data-function="history" data-book-id="' + bookId + '" data-chapter="' + chapter + '">📜 历史背景</button>';
+        html += '<button class="ai-btn" data-function="saints" data-book-id="' + bookId + '" data-chapter="' + chapter + '">👼 圣人诠释</button>';
+        html += '<button class="ai-btn" data-function="prayer" data-book-id="' + bookId + '" data-chapter="' + chapter + '">🙏 祈祷指引</button>';
+        html += '</div>';
+        html += '</div>';
+        
         // 底部导航（完整版）
         html += '<div class="nav-links">';
         
@@ -421,6 +443,10 @@
                     if (versesData && navData) {
                         container.innerHTML = renderVerses(versesData, bookId, parseInt(chapter), navData);
                         window.scrollTo(0, 0);
+                        
+                        // 绑定 AI 按钮事件
+                        initAIButtons();
+                        
                         // 页面渲染完成后预读上一章和下一章
                         setTimeout(function() {
                             preloadChapters(navData);
@@ -474,6 +500,180 @@
         
         // 初始加载
         handleRoute();
+    }
+    
+    /**
+     * 初始化 AI 按钮事件
+     */
+    function initAIButtons() {
+        var aiButtons = document.querySelectorAll('.ai-btn');
+        var resultBox = document.getElementById('ai-result');
+        var resultTitle = document.getElementById('ai-result-title');
+        var resultContent = document.getElementById('ai-result-content');
+        var resultLoading = document.getElementById('ai-result-loading');
+        var resultError = document.getElementById('ai-result-error');
+        var closeBtn = document.getElementById('ai-result-close');
+        
+        if (!resultBox) return;
+        
+        var functionNames = {
+            'summary': '📋 经文总结',
+            'history': '📜 历史背景',
+            'saints': '👼 圣人诠释',
+            'prayer': '🙏 祈祷指引'
+        };
+        
+        // 当前激活的按钮
+        var activeButton = null;
+        
+        // 内容缓存（内存缓存，刷新页面会丢失）
+        var contentCache = {};
+        
+        // 关闭结果框
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                resultBox.style.display = 'none';
+                // 移除激活状态
+                var buttons = document.querySelectorAll('.ai-btn');
+                for (var k = 0; k < buttons.length; k++) {
+                    buttons[k].classList.remove('active');
+                }
+                activeButton = null;
+            });
+        }
+        
+        // 为每个按钮绑定点击事件
+        for (var i = 0; i < aiButtons.length; i++) {
+            aiButtons[i].addEventListener('click', function() {
+                var functionType = this.getAttribute('data-function');
+                var bookId = this.getAttribute('data-book-id');
+                var chapter = this.getAttribute('data-chapter');
+                
+                // 如果点击的是当前激活按钮，关闭结果框
+                if (this === activeButton && resultBox.style.display !== 'none') {
+                    resultBox.style.display = 'none';
+                    this.classList.remove('active');
+                    activeButton = null;
+                } else {
+                    // 否则请求 AI 生成（或从缓存读取）
+                    // 移除其他按钮的激活状态
+                    for (var j = 0; j < aiButtons.length; j++) {
+                        aiButtons[j].classList.remove('active');
+                    }
+                    // 激活当前按钮
+                    this.classList.add('active');
+                    activeButton = this;
+                    
+                    // 生成缓存键
+                    var cacheKey = bookId + '-' + chapter + '-' + functionType;
+                    
+                    // 检查缓存
+                    if (contentCache[cacheKey]) {
+                        // 从缓存读取（秒开）
+                        showCachedContent(functionType, contentCache[cacheKey]);
+                    } else {
+                        // 请求 AI 生成
+                        requestAI(functionType, bookId, chapter, cacheKey);
+                    }
+                }
+            });
+        }
+        
+        function showCachedContent(functionType, content) {
+            // 显示缓存内容（秒开）
+            resultBox.style.display = 'block';
+            resultTitle.textContent = functionNames[functionType] + ' (缓存)';
+            resultContent.innerHTML = formatAIResponse(content);
+            resultContent.style.display = 'block';
+            resultError.style.display = 'none';
+            resultLoading.style.display = 'none';
+        }
+        
+        function requestAI(functionType, bookId, chapter, cacheKey) {
+            // 显示结果框和加载状态
+            resultBox.style.display = 'block';
+            resultTitle.textContent = functionNames[functionType];
+            resultContent.style.display = 'none';
+            resultError.style.display = 'none';
+            resultLoading.style.display = 'block';
+            
+            // 发送请求
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/ai/generate', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    resultLoading.style.display = 'none';
+                    
+                    if (xhr.status === 200) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            if (data.success && data.data && data.data.content) {
+                                // 保存到缓存
+                                contentCache[cacheKey] = data.data.content;
+                                
+                                // 显示内容
+                                resultContent.innerHTML = formatAIResponse(data.data.content);
+                                resultContent.style.display = 'block';
+                            } else {
+                                showError(data.message || '生成失败');
+                            }
+                        } catch (e) {
+                            showError('解析响应失败：' + e.message);
+                        }
+                    } else {
+                        var errorMsg = '请求失败（' + xhr.status + '）';
+                        try {
+                            var errorData = JSON.parse(xhr.responseText);
+                            errorMsg = errorData.message || errorMsg;
+                        } catch (e) {}
+                        showError(errorMsg);
+                    }
+                }
+            };
+            
+            xhr.onerror = function() {
+                resultLoading.style.display = 'none';
+                showError('网络错误，请检查连接');
+            };
+            
+            xhr.send(JSON.stringify({
+                function_type: functionType,
+                book_id: parseInt(bookId),
+                chapter: parseInt(chapter),
+                lang: 'zh'
+            }));
+        }
+        
+        function showError(message) {
+            resultError.textContent = '❌ ' + message;
+            resultError.style.display = 'block';
+        }
+        
+        function formatAIResponse(content) {
+            // 使用 marked.js 解析 Markdown（成熟的库）
+            if (typeof marked !== 'undefined') {
+                try {
+                    // 配置 marked 选项
+                    marked.setOptions({
+                        breaks: true,        // 支持 GitHub 风格的换行
+                        gfm: true,           // 启用 GitHub Flavored Markdown
+                        headerIds: false,    // 不生成 header id
+                        mangle: false        // 不混淆邮箱
+                    });
+                    return marked.parse(content);
+                } catch (e) {
+                    console.error('Markdown 解析失败:', e);
+                    // 降级：返回纯文本
+                    return '<p>' + content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+                }
+            } else {
+                // marked.js 未加载，降级处理
+                console.warn('marked.js 未加载，使用简单格式化');
+                return '<p>' + content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+            }
+        }
     }
     
     // 页面加载完成后初始化

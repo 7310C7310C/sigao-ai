@@ -6,6 +6,7 @@ module.exports = {
   user: process.env.DB_USER || 'sigao',
   password: process.env.DB_PASS || 'sigao',
   database: process.env.DB_NAME || 'sigao_ai',
+  charset: 'utf8mb4',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0

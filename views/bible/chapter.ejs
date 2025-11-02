@@ -23,11 +23,143 @@
                 </li>
             <% }) %>
         </ul>
+        
+        <!-- AI 辅助功能 -->
+        <div class="ai-features">
+            <h2>🤖 AI 读经辅助</h2>
+            <div class="ai-buttons">
+                <button class="ai-btn" data-function="summary">📋 经文总结</button>
+                <button class="ai-btn" data-function="history">📜 历史背景</button>
+                <button class="ai-btn" data-function="saints">👼 圣人诠释</button>
+                <button class="ai-btn" data-function="prayer">🙏 祈祷指引</button>
+            </div>
+            <div id="ai-result" class="ai-result" style="display: none;">
+                <div class="ai-result-header">
+                    <h3 id="ai-result-title"></h3>
+                    <button id="ai-result-close" class="ai-close-btn">✕</button>
+                </div>
+                <div id="ai-result-content" class="ai-result-content"></div>
+                <div id="ai-result-loading" class="ai-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>正在生成内容...</p>
+                </div>
+                <div id="ai-result-error" class="ai-error" style="display: none;"></div>
+            </div>
+        </div>
+        
         <div class="nav-links">
             <a href="/book/<%= bookId %>">← 返回章节列表</a>
             <a href="/">🏠 返回首页</a>
         </div>
     </div>
     <script src="/js/main.js"></script>
+    <script>
+        // AI 功能脚本
+        (function() {
+            var aiButtons = document.querySelectorAll('.ai-btn');
+            var resultBox = document.getElementById('ai-result');
+            var resultTitle = document.getElementById('ai-result-title');
+            var resultContent = document.getElementById('ai-result-content');
+            var resultLoading = document.getElementById('ai-result-loading');
+            var resultError = document.getElementById('ai-result-error');
+            var closeBtn = document.getElementById('ai-result-close');
+            
+            var functionNames = {
+                'summary': '📋 经文总结',
+                'history': '📜 历史背景',
+                'saints': '👼 圣人诠释',
+                'prayer': '🙏 祈祷指引'
+            };
+            
+            // 关闭结果框
+            closeBtn.addEventListener('click', function() {
+                resultBox.style.display = 'none';
+            });
+            
+            // 为每个按钮绑定点击事件
+            for (var i = 0; i < aiButtons.length; i++) {
+                aiButtons[i].addEventListener('click', function() {
+                    var functionType = this.getAttribute('data-function');
+                    requestAI(functionType);
+                });
+            }
+            
+            function requestAI(functionType) {
+                // 显示结果框和加载状态
+                resultBox.style.display = 'block';
+                resultTitle.textContent = functionNames[functionType];
+                resultContent.style.display = 'none';
+                resultError.style.display = 'none';
+                resultLoading.style.display = 'block';
+                
+                // 滚动到结果框
+                resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // 发送请求
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/ai/generate', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        resultLoading.style.display = 'none';
+                        
+                        if (xhr.status === 200) {
+                            try {
+                                var data = JSON.parse(xhr.responseText);
+                                if (data.success && data.data && data.data.content) {
+                                    resultContent.innerHTML = formatAIResponse(data.data.content);
+                                    resultContent.style.display = 'block';
+                                } else {
+                                    showError(data.message || '生成失败');
+                                }
+                            } catch (e) {
+                                showError('解析响应失败：' + e.message);
+                            }
+                        } else {
+                            var errorMsg = '请求失败（' + xhr.status + '）';
+                            try {
+                                var errorData = JSON.parse(xhr.responseText);
+                                errorMsg = errorData.message || errorMsg;
+                            } catch (e) {}
+                            showError(errorMsg);
+                        }
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    resultLoading.style.display = 'none';
+                    showError('网络错误，请检查连接');
+                };
+                
+                // 获取当前章节信息
+                var bookId = '<%= bookId %>';
+                var chapter = '<%= chapter %>';
+                
+                xhr.send(JSON.stringify({
+                    function_type: functionType,
+                    book_id: bookId,
+                    chapter: chapter,
+                    lang: 'zh'
+                }));
+            }
+            
+            function showError(message) {
+                resultError.textContent = '❌ ' + message;
+                resultError.style.display = 'block';
+            }
+            
+            function formatAIResponse(content) {
+                // 将换行转为 <br>，保留段落格式
+                var formatted = content
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>');
+                return '<p>' + formatted + '</p>';
+            }
+        })();
+    </script>
 </body>
 </html>

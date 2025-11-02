@@ -16,4 +16,10 @@ router.get('/', AdminController.showAdminPage);
 // 处理文件上传
 router.post('/upload', upload.single('file'), AdminController.handleUpload);
 
+// AI 提示词管理
+router.get('/prompts', AdminController.showPromptsPage);
+router.get('/prompts/edit/:id', AdminController.showEditPromptPage);
+router.post('/prompts/update/:id', AdminController.updatePrompt);
+router.post('/prompts/toggle/:id', AdminController.togglePrompt);
+
 module.exports = router;

@@ -1,5 +1,6 @@
 const express = require('express');
 const BibleService = require('../services/bible.service');
+const AIController = require('../controllers/ai.controller');
 
 const router = express.Router();
 
@@ -78,5 +79,12 @@ router.get('/navigation', async (req, res, next) => {
     next(error);
   }
 });
+
+/**
+ * POST /api/ai/generate
+ * 生成 AI 辅助内容
+ * Body: { function_type, book_id, chapter, lang }
+ */
+router.post('/ai/generate', AIController.generateContent);
 
 module.exports = router;

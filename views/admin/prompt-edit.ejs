@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>编辑提示词 - <%= prompt.prompt_name %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: inherit;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+        
+        .form-group textarea {
+            min-height: 300px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+        
+        .form-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+        
+        .checkbox-label {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .help-text {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 3px;
+            margin-left: 0.5rem;
+        }
+        
+        .badge-system {
+            background: #9b59b6;
+            color: white;
+        }
+        
+        .badge-function {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .form-actions {
+            margin-top: 2rem;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-flex-wrap: wrap;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .form-actions button,
+        .form-actions a {
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            -webkit-transition: all 0.2s ease;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-save {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: #2980b9;
+        }
+        
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #7f8c8d;
+        }
+        
+        .variable-hints {
+            background: #e8f4f8;
+            padding: 1rem;
+            border-left: 3px solid #3498db;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .variable-hints h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .variable-hints ul {
+            margin: 0.5rem 0 0 1.5rem;
+            padding: 0;
+        }
+        
+        .variable-hints code {
+            background: #fff;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+        }
+        
+        @media screen and (max-width: 480px) {
+            .form-container {
+                padding: 1rem;
+            }
+            
+            .form-actions {
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                -webkit-flex-direction: column;
+                -ms-flex-direction: column;
+                flex-direction: column;
+            }
+            
+            .form-actions button,
+            .form-actions a {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✏️ 编辑提示词</h1>
+        
+        <div class="form-container">
+            <h2>
+                <%= prompt.prompt_name %>
+                <span class="badge <%= prompt.prompt_type === 'system' ? 'badge-system' : 'badge-function' %>">
+                    <%= prompt.prompt_type === 'system' ? '系统' : '功能' %>
+                </span>
+            </h2>
+            
+            <% if (prompt.prompt_type === 'function') { %>
+                <div class="variable-hints">
+                    <h4>📝 可用变量</h4>
+                    <p class="help-text">在提示词中可以使用以下变量，系统会自动替换为实际内容：</p>
+                    <ul>
+                        <li><code>{verses}</code> - 当前经文内容</li>
+                        <li><code>{chapter}</code> - 当前章节信息（书卷名 + 章节号）</li>
+                        <li><code>{book}</code> - 书卷名称</li>
+                        <li><code>{chapter_num}</code> - 章节号</li>
+                    </ul>
+                </div>
+            <% } %>
+            
+            <form method="post" action="/admin/prompts/update/<%= prompt.id %>">
+                <div class="form-group">
+                    <label for="prompt_name">提示词名称 *</label>
+                    <input 
+                        type="text" 
+                        id="prompt_name" 
+                        name="prompt_name" 
+                        value="<%= prompt.prompt_name %>" 
+                        required
+                    />
+                    <p class="help-text">给提示词起个易于识别的名称</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="prompt_template">提示词内容 *</label>
+                    <textarea 
+                        id="prompt_template" 
+                        name="prompt_template" 
+                        required
+                    ><%= prompt.prompt_template %></textarea>
+                    <p class="help-text">
+                        <% if (prompt.prompt_type === 'system') { %>
+                            定义 AI 的角色和基本原则（全局生效）
+                        <% } else { %>
+                            定义具体任务的指令（可使用变量）
+                        <% } %>
+                    </p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input 
+                            type="checkbox" 
+                            id="is_active" 
+                            name="is_active" 
+                            value="1"
+                            <%= prompt.is_active ? 'checked' : '' %>
+                        />
+                        <span>启用此提示词</span>
+                    </label>
+                    <p class="help-text">只有启用的提示词才会在 AI 对话中使用</p>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">💾 保存修改</button>
+                    <a href="/admin/prompts" class="btn-cancel">取消</a>
+                </div>
+            </form>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/admin/prompts">返回提示词列表</a>
+            <a href="/admin">返回管理首页</a>
+        </div>
+    </div>
+    <script src="/js/main.js"></script>
+</body>
+</html>

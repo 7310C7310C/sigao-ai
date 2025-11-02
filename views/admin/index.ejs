@@ -13,13 +13,26 @@
 <body>
     <div class="container">
         <h1>⚙️ 管理后台</h1>
-        <h2>导入 Excel 数据</h2>
         
         <% if (message) { %>
             <div class="message <%= message.indexOf('错误') >= 0 || message.indexOf('Error') >= 0 ? 'error' : 'success' %>">
                 <%= message %>
             </div>
         <% } %>
+        
+        <!-- 功能导航 -->
+        <div class="admin-nav-grid">
+            <a href="/admin/prompts" class="admin-nav-btn">
+                <span class="admin-nav-icon">🤖</span>
+                <span class="admin-nav-label">提示词管理</span>
+            </a>
+            <a href="/admin" class="admin-nav-btn active">
+                <span class="admin-nav-icon">📤</span>
+                <span class="admin-nav-label">圣经导入</span>
+            </a>
+        </div>
+        
+        <h2>导入 Excel 数据</h2>
         
         <form method="post" action="/admin/upload" enctype="multipart/form-data">
             <p>

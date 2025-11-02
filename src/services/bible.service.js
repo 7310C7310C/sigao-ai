@@ -37,6 +37,21 @@ class BibleService {
   }
 
   /**
+   * 获取某章的完整信息（包含书卷名和经文）
+   */
+  static async getChapter(bookId, chapter) {
+    const book = await Book.findById(bookId);
+    const verses = await Verse.findByBookAndChapter(bookId, chapter);
+    
+    return {
+      bookId: bookId,
+      bookName: book ? book.name_cn : '',
+      chapter: chapter,
+      verses: verses
+    };
+  }
+
+  /**
    * 获取章节导航信息（上一章/下一章）
    */
   static async getChapterNavigation(bookId, chapter) {

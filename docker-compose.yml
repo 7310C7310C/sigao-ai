@@ -34,6 +34,8 @@ services:
       - DB_PASS=${DB_PASS}
       - DB_NAME=${DB_NAME}
       - ADMIN_PASS=${ADMIN_PASS:-admin}
+      - MAGISTERIUM_API_KEY=${MAGISTERIUM_API_KEY}
+      - MAGISTERIUM_API_URL=${MAGISTERIUM_API_URL}
     ports:
       - "3000:3000"
     depends_on:
