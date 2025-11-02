@@ -8,6 +8,50 @@ var BibleService = require('../services/bible.service');
 var AIResponse = require('../models/AIResponse');
 var Logger = require('../utils/logger');
 
+/**
+ * 移除 Markdown 内容末尾的脚注列表
+ * 策略：查找最后一个脚注引用定义 [^数字] 的位置，从其开始处向前找到分隔线
+ */
+function removeFootnotes(content) {
+    if (!content || typeof content !== 'string') {
+        return content;
+    }
+    
+    // 使用正则表达式查找所有脚注定义：行首的 [^数字] 格式
+    // 例如：[^1] 文献标题...
+    var footnotePattern = /\n\[\^\d+\]\s/g;
+    var matches = [];
+    var match;
+    
+    // 收集所有脚注定义的位置
+    while ((match = footnotePattern.exec(content)) !== null) {
+        matches.push(match.index);
+    }
+    
+    // 如果没有找到脚注定义，直接返回原内容
+    if (matches.length === 0) {
+        return content;
+    }
+    
+    // 取第一个脚注定义的位置（它们应该集中在末尾）
+    var firstFootnoteIndex = matches[0];
+    
+    // 从第一个脚注定义向前查找 --- 分隔线
+    // 脚注列表通常格式为：\n---\n\n[^1] ...
+    var beforeFootnote = content.substring(0, firstFootnoteIndex);
+    
+    // 查找最后一个 --- 分隔线（可能有多个 ---, 最后一个才是脚注分隔符）
+    var lastSeparatorIndex = beforeFootnote.lastIndexOf('\n---');
+    
+    if (lastSeparatorIndex !== -1) {
+        // 从分隔线之前截断
+        return beforeFootnote.substring(0, lastSeparatorIndex).trim();
+    }
+    
+    // 如果没找到分隔线，从第一个脚注定义处截断
+    return beforeFootnote.trim();
+}
+
 var AIController = {
     /**
      * 生成 AI 内容（带数据库缓存）
@@ -56,10 +100,17 @@ var AIController = {
                                 chapter: chapter
                             });
                             
+                            // 移除脚注后返回
+                            var cleanedData = {
+                                content: removeFootnotes(cached.content),
+                                citations: cached.citations,
+                                related_questions: cached.related_questions
+                            };
+                            
                             res.setHeader('Content-Type', 'application/json; charset=utf-8');
                             return res.json({
                                 success: true,
-                                data: cached,
+                                data: cleanedData,
                                 cached: true
                             });
                         }
@@ -135,11 +186,17 @@ var AIController = {
                         });
                     })
                     .then(function(responseData) {
-                        // 5. 返回结果（强制设置 UTF-8 编码）
+                        // 5. 返回结果（移除脚注后，强制设置 UTF-8 编码）
+                        var cleanedData = {
+                            content: removeFootnotes(responseData.content),
+                            citations: responseData.citations,
+                            related_questions: responseData.related_questions
+                        };
+                        
                         res.setHeader('Content-Type', 'application/json; charset=utf-8');
                         res.json({
                             success: true,
-                            data: responseData,
+                            data: cleanedData,
                             cached: false
                         });
                     })
@@ -224,7 +281,8 @@ var AIController = {
                             });
                             
                             // 将缓存的内容以流式方式返回（逐字发送，前端有打字机效果）
-                            var content = cached.content || '';
+                            // 移除脚注列表
+                            var content = removeFootnotes(cached.content || '');
                             var citations = cached.citations || [];
                             var chunkSize = 10; // 每次发送10个字符（更流畅）
                             var index = 0;
@@ -335,6 +393,8 @@ var AIController = {
                             }) + '\n\n');
                         }, 3000);
                         
+                        var footnotesStarted = false; // 标记是否开始脚注部分
+                        
                         // 3. 调用流式 AI 服务
                         MagisteriumService.generateStream(
                             functionType,
@@ -352,6 +412,51 @@ var AIController = {
                                     Logger.info('首个内容片段已到达', { functionType: functionType });
                                 }
                                 
+                                // 如果已经进入脚注部分，忽略后续内容
+                                if (footnotesStarted) {
+                                    return;
+                                }
+                                
+                                // 检测脚注定义的开始：行首的 [^数字] 格式
+                                // 正则：\n[^1] 或 \n[^12] 等
+                                var footnotePattern = /\n\[\^\d+\]\s/;
+                                var hasFootnote = footnotePattern.test(content);
+                                
+                                if (hasFootnote) {
+                                    // 找到脚注定义的位置
+                                    var match = content.match(footnotePattern);
+                                    if (match && match.index !== undefined) {
+                                        var footnoteStartIndex = match.index;
+                                        
+                                        // 从脚注开始位置向前查找最后一个 --- 分隔线
+                                        var beforeFootnote = content.substring(0, footnoteStartIndex);
+                                        var lastSeparator = beforeFootnote.lastIndexOf('\n---');
+                                        
+                                        var validContent;
+                                        if (lastSeparator !== -1) {
+                                            // 找到分隔线，截取到分隔线之前
+                                            validContent = content.substring(0, lastSeparator);
+                                        } else {
+                                            // 没找到分隔线，截取到脚注之前
+                                            validContent = beforeFootnote;
+                                        }
+                                        
+                                        accumulatedContent += validContent;
+                                        
+                                        // 发送最后一块有效内容
+                                        if (validContent) {
+                                            res.write('data: ' + JSON.stringify({
+                                                type: 'chunk',
+                                                content: validContent
+                                            }) + '\n\n');
+                                        }
+                                        
+                                        footnotesStarted = true;
+                                        return;
+                                    }
+                                }
+                                
+                                // 正常内容，继续发送
                                 accumulatedContent += content;
                                 res.write('data: ' + JSON.stringify({
                                     type: 'chunk',
