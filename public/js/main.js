@@ -63,11 +63,36 @@
             'cursor: pointer;' +
             'opacity: 0;' +
             'visibility: hidden;' +
-            'transition: opacity 0.3s, visibility 0.3s;' +
+            'transition: opacity 0.3s, visibility 0.3s, background-color 0.2s;' +
             'z-index: 10001;' +
             'box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
         
+        // 根据夜间模式设置初始颜色
+        function updateButtonColor() {
+            var isDarkMode = document.body.classList.contains('dark-mode');
+            if (isDarkMode) {
+                button.style.backgroundColor = '#1e5a8e';
+            } else {
+                button.style.backgroundColor = '#3498db';
+            }
+        }
+        
+        updateButtonColor();
         document.body.appendChild(button);
+        
+        // 监听夜间模式切换
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    updateButtonColor();
+                }
+            });
+        });
+        
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
         
         // 显示/隐藏按钮
         function toggleButton() {
@@ -129,6 +154,44 @@
             } else {
                 // AI 结果区关闭时，滚动页面
                 smoothScrollToTop();
+            }
+        });
+        
+        // 添加 hover 效果
+        button.addEventListener('mouseenter', function() {
+            var isDarkMode = document.body.classList.contains('dark-mode');
+            if (isDarkMode) {
+                button.style.backgroundColor = '#164a74';
+            } else {
+                button.style.backgroundColor = '#2980b9';
+            }
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            var isDarkMode = document.body.classList.contains('dark-mode');
+            if (isDarkMode) {
+                button.style.backgroundColor = '#1e5a8e';
+            } else {
+                button.style.backgroundColor = '#3498db';
+            }
+        });
+        
+        // 添加 active 效果
+        button.addEventListener('mousedown', function() {
+            var isDarkMode = document.body.classList.contains('dark-mode');
+            if (isDarkMode) {
+                button.style.backgroundColor = '#0d3a5a';
+            } else {
+                button.style.backgroundColor = '#21618c';
+            }
+        });
+        
+        button.addEventListener('mouseup', function() {
+            var isDarkMode = document.body.classList.contains('dark-mode');
+            if (isDarkMode) {
+                button.style.backgroundColor = '#164a74';
+            } else {
+                button.style.backgroundColor = '#2980b9';
             }
         });
         
