@@ -11,7 +11,8 @@
         currentRoute: null,
         loading: false,
         cache: {},
-        scrollToVerse: null // 用于保存需要滚动到的经文引用
+        scrollToVerse: null, // 用于保存需要滚动到的经文引用
+        allBooks: [] // 存储所有书卷列表，用于实时搜索提示
     };
     
     /**
@@ -154,9 +155,10 @@
         // 添加搜索框
         html += '<div class="search-container">';
         html += '<div class="search-box">';
-        html += '<input type="text" id="search-input" class="search-input" placeholder="搜索经文或书卷名..." aria-label="搜索">';
+        html += '<input type="text" id="search-input" class="search-input" placeholder="搜索经文或书卷名..." aria-label="搜索" autocomplete="off">';
         html += '<button id="search-btn" class="search-btn">搜索</button>';
         html += '</div>';
+        html += '<div id="search-suggestions" class="search-suggestions" style="display: none;"></div>';
         html += '</div>';
         
         // 渲染新约
@@ -371,12 +373,20 @@
         var html = '<div class="container">';
         html += '<h1>🔍 搜索结果</h1>';
         
+        // 面包屑导航
+        html += '<div class="breadcrumb">';
+        html += '<a href="#/">首页</a>';
+        html += ' / ';
+        html += '<span>搜索结果</span>';
+        html += '</div>';
+        
         // 搜索框
         html += '<div class="search-container">';
         html += '<div class="search-box">';
-        html += '<input type="text" id="search-input" class="search-input" placeholder="搜索经文或书卷名..." value="' + (keyword || '').replace(/"/g, '&quot;') + '" aria-label="搜索">';
+        html += '<input type="text" id="search-input" class="search-input" placeholder="搜索经文或书卷名..." value="' + (keyword || '').replace(/"/g, '&quot;') + '" aria-label="搜索" autocomplete="off">';
         html += '<button id="search-btn" class="search-btn">搜索</button>';
         html += '</div>';
+        html += '<div id="search-suggestions" class="search-suggestions" style="display: none;"></div>';
         html += '</div>';
         
         if (!keyword || keyword.trim() === '') {
@@ -520,6 +530,8 @@
                     container.innerHTML = '<div class="container"><p>加载失败，请刷新重试</p></div>';
                     return;
                 }
+                // 保存书卷列表到全局状态
+                appState.allBooks = response.data || [];
                 container.innerHTML = renderBookList(response.data);
                 // 绑定搜索事件
                 bindSearchEvents();
@@ -638,27 +650,179 @@
     function bindSearchEvents() {
         var searchInput = document.getElementById('search-input');
         var searchBtn = document.getElementById('search-btn');
+        var suggestionsBox = document.getElementById('search-suggestions');
         
         if (!searchInput || !searchBtn) {
             return;
         }
         
+        var currentSuggestionIndex = -1; // 当前选中的建议索引
+        
         function performSearch() {
             var keyword = searchInput.value.trim();
             if (keyword) {
+                hideSuggestions();
                 window.location.hash = '#/search?q=' + encodeURIComponent(keyword);
             }
         }
         
+        function showSuggestions(books) {
+            if (!suggestionsBox || books.length === 0) {
+                hideSuggestions();
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < books.length; i++) {
+                var book = books[i];
+                html += '<div class="search-suggestion-item" data-book-id="' + book.id + '" data-index="' + i + '">';
+                html += '<span class="suggestion-name">' + book.name_cn + '</span>';
+                if (book.book_type) {
+                    html += ' <span class="suggestion-type">(' + book.book_type + ')</span>';
+                }
+                html += '</div>';
+            }
+            
+            suggestionsBox.innerHTML = html;
+            suggestionsBox.style.display = 'block';
+            currentSuggestionIndex = -1;
+            
+            // 绑定点击事件
+            var items = suggestionsBox.querySelectorAll('.search-suggestion-item');
+            for (var i = 0; i < items.length; i++) {
+                items[i].addEventListener('click', function() {
+                    var bookId = this.getAttribute('data-book-id');
+                    hideSuggestions();
+                    window.location.hash = '#/book/' + bookId;
+                });
+            }
+        }
+        
+        function hideSuggestions() {
+            if (suggestionsBox) {
+                suggestionsBox.style.display = 'none';
+                suggestionsBox.innerHTML = '';
+                currentSuggestionIndex = -1;
+            }
+        }
+        
+        function updateSuggestionHighlight() {
+            if (!suggestionsBox) return;
+            
+            var items = suggestionsBox.querySelectorAll('.search-suggestion-item');
+            for (var i = 0; i < items.length; i++) {
+                if (i === currentSuggestionIndex) {
+                    items[i].classList.add('active');
+                } else {
+                    items[i].classList.remove('active');
+                }
+            }
+        }
+        
+        // 实时搜索建议
+        var inputTimeout;
+        searchInput.addEventListener('input', function() {
+            var keyword = this.value.trim();
+            
+            // 清除之前的超时
+            if (inputTimeout) {
+                clearTimeout(inputTimeout);
+            }
+            
+            if (!keyword) {
+                hideSuggestions();
+                return;
+            }
+            
+            // 延迟搜索，避免频繁触发
+            inputTimeout = setTimeout(function() {
+                // 在书卷列表中搜索匹配的书卷
+                var matchedBooks = [];
+                for (var i = 0; i < appState.allBooks.length; i++) {
+                    var book = appState.allBooks[i];
+                    if (book.name_cn.indexOf(keyword) !== -1) {
+                        matchedBooks.push(book);
+                        // 最多显示8个建议
+                        if (matchedBooks.length >= 8) {
+                            break;
+                        }
+                    }
+                }
+                
+                showSuggestions(matchedBooks);
+            }, 200);
+        });
+        
         // 点击搜索按钮
         searchBtn.addEventListener('click', performSearch);
         
-        // 回车键搜索
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.keyCode === 13 || e.key === 'Enter') {
-                e.preventDefault();
-                performSearch();
+        // 键盘事件处理
+        searchInput.addEventListener('keydown', function(e) {
+            if (!suggestionsBox || suggestionsBox.style.display === 'none') {
+                // 没有建议时，回车执行搜索
+                if (e.keyCode === 13 || e.key === 'Enter') {
+                    e.preventDefault();
+                    performSearch();
+                }
+                return;
             }
+            
+            var items = suggestionsBox.querySelectorAll('.search-suggestion-item');
+            if (items.length === 0) return;
+            
+            // 上箭头
+            if (e.keyCode === 38 || e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentSuggestionIndex--;
+                if (currentSuggestionIndex < -1) {
+                    currentSuggestionIndex = items.length - 1;
+                }
+                updateSuggestionHighlight();
+            }
+            // 下箭头
+            else if (e.keyCode === 40 || e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentSuggestionIndex++;
+                if (currentSuggestionIndex >= items.length) {
+                    currentSuggestionIndex = -1;
+                }
+                updateSuggestionHighlight();
+            }
+            // 回车键
+            else if (e.keyCode === 13 || e.key === 'Enter') {
+                e.preventDefault();
+                if (currentSuggestionIndex >= 0 && currentSuggestionIndex < items.length) {
+                    // 选择建议的书卷
+                    var bookId = items[currentSuggestionIndex].getAttribute('data-book-id');
+                    hideSuggestions();
+                    window.location.hash = '#/book/' + bookId;
+                } else {
+                    // 没有选中建议，执行搜索
+                    performSearch();
+                }
+            }
+            // ESC 键关闭建议
+            else if (e.keyCode === 27 || e.key === 'Escape') {
+                e.preventDefault();
+                hideSuggestions();
+            }
+        });
+        
+        // 点击页面其他地方时隐藏建议
+        document.addEventListener('click', function(e) {
+            if (e.target !== searchInput && e.target !== suggestionsBox) {
+                hideSuggestions();
+            }
+        });
+        
+        // 输入框失去焦点时延迟隐藏（给点击建议留时间）
+        searchInput.addEventListener('blur', function() {
+            setTimeout(function() {
+                // 检查焦点是否在建议框内
+                if (document.activeElement !== searchInput) {
+                    hideSuggestions();
+                }
+            }, 200);
         });
     }
     

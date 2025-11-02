@@ -324,6 +324,52 @@ form {
     background-color: #21618c;
 }
 
+/* 搜索建议框 */
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border: 2px solid #3498db;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.search-suggestion-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    -webkit-transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease;
+}
+
+.search-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.search-suggestion-item:hover,
+.search-suggestion-item.active {
+    background-color: #e8f4f8;
+}
+
+.search-suggestion-item .suggestion-name {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.search-suggestion-item .suggestion-type {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-left: 0.5rem;
+}
+
 /* 搜索结果区域 */
 .search-results {
     margin: 2rem 0;
@@ -1027,6 +1073,28 @@ body.dark-mode .search-verse-text .highlight {
     color: #fff9c4;
 }
 
+body.dark-mode .search-suggestions {
+    background-color: #2d2d2d;
+    border-color: #64b5f6;
+}
+
+body.dark-mode .search-suggestion-item {
+    border-bottom-color: #444;
+}
+
+body.dark-mode .search-suggestion-item:hover,
+body.dark-mode .search-suggestion-item.active {
+    background-color: #3a3a3a;
+}
+
+body.dark-mode .search-suggestion-item .suggestion-name {
+    color: #e0e0e0;
+}
+
+body.dark-mode .search-suggestion-item .suggestion-type {
+    color: #a0a0a0;
+}
+
 /* AI 按钮夜间模式 */
 body.dark-mode .ai-features-fixed {
     background: #1a1a1a;
@@ -1626,22 +1694,48 @@ body.dark-mode .ai-error {
 @media screen and (max-width: 480px) {
     /* 搜索框移动端适配 */
     .search-box {
-        -webkit-box-orient: vertical;
-        -webkit-box-direction: normal;
-        -webkit-flex-direction: column;
-        -ms-flex-direction: column;
-        flex-direction: column;
         gap: 0.5rem;
+        -webkit-flex-wrap: nowrap;
+        -ms-flex-wrap: nowrap;
+        flex-wrap: nowrap; /* 禁止换行，按钮保持在右侧 */
     }
     
     .search-input {
-        width: 100%;
+        -webkit-box-flex: 1;
+        -webkit-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+        min-width: 0;
         font-size: 0.95rem;
+        padding: 0.65rem 0.85rem;
     }
     
     .search-btn {
-        width: 100%;
-        min-width: 0;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        min-width: 60px;
+        min-height: 44px; /* 保持触摸目标可达性 */
+        width: auto !important; /* 覆盖通用按钮在移动端的 width:100% 规则 */
+        -webkit-flex: 0 0 auto;
+        -ms-flex: 0 0 auto;
+        flex: 0 0 auto; /* 按钮占自身内容宽度 */
+    }
+    
+    .search-suggestions {
+        max-height: 300px;
+        font-size: 0.95rem;
+    }
+    
+    .search-suggestion-item {
+        padding: 0.65rem 0.85rem;
+    }
+    
+    .search-suggestion-item .suggestion-name {
+        font-size: 0.95rem;
+    }
+    
+    .search-suggestion-item .suggestion-type {
+        font-size: 0.8rem;
     }
     
     .search-results h2 {
