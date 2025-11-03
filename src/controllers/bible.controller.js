@@ -48,10 +48,12 @@ class BibleController {
    */
   static async search(req, res, next) {
     try {
-      const keyword = req.query.q || req.query.keyword || '';
-      const limit = Number(req.query.limit) || 100;
-      
-      const results = await BibleService.search(keyword, limit);
+  const keyword = req.query.q || req.query.keyword || '';
+  // 分页参数：page（页码，从1开始），per_page（每页条数，默认100）
+  const page = Number(req.query.page) || 1;
+  const perPage = Number(req.query.per_page) || Number(req.query.limit) || 100;
+
+  const results = await BibleService.search(keyword, perPage, page);
       
       res.json({
         success: true,

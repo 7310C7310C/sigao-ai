@@ -396,7 +396,24 @@
             return html;
         }
         
-        var hasResults = (results.books && results.books.length > 0) || (results.verses && results.verses.length > 0);
+        var versesItems = [];
+        var versesTotal = 0;
+        var versesPage = 1;
+        var versesPerPage = 100;
+        if (results.verses) {
+            if (Array.isArray(results.verses)) {
+                // backward compatibility
+                versesItems = results.verses;
+                versesTotal = results.verses.length;
+            } else {
+                versesItems = results.verses.items || [];
+                versesTotal = results.verses.total || (versesItems ? versesItems.length : 0);
+                versesPage = results.verses.page || 1;
+                versesPerPage = results.verses.per_page || versesPerPage;
+            }
+        }
+
+        var hasResults = (results.books && results.books.length > 0) || (versesItems && versesItems.length > 0);
         
         if (!hasResults) {
             html += '<div class="search-results-empty">未找到包含 "' + keyword + '" 的结果</div>';
@@ -426,11 +443,11 @@
         }
         
         // 显示匹配的经文
-        if (results.verses && results.verses.length > 0) {
-            html += '<h3>📖 匹配的经文 (' + results.verses.length + ')</h3>';
+        if (versesItems && versesItems.length > 0) {
+            html += '<h3>📖 匹配的经文 (' + versesTotal + ')</h3>';
             html += '<ul class="search-verses-list">';
-            for (var i = 0; i < results.verses.length; i++) {
-                var verse = results.verses[i];
+            for (var i = 0; i < versesItems.length; i++) {
+                var verse = versesItems[i];
                 html += '<li data-book-id="' + verse.book_id + '" data-chapter="' + verse.chapter + '" data-verse-ref="' + (verse.verse_ref || '') + '">';
                 html += '<div class="search-verse-ref">';
                 html += verse.book_name + ' ' + verse.chapter;
@@ -447,6 +464,26 @@
                 html += '</li>';
             }
             html += '</ul>';
+            // 分页控件
+            var totalPages = Math.max(1, Math.ceil(versesTotal / versesPerPage));
+            if (totalPages > 1) {
+                html += '<div class="search-pagination" aria-label="分页">';
+                var prevPage = Math.max(1, versesPage - 1);
+                var nextPage = Math.min(totalPages, versesPage + 1);
+                var baseQuery = '#/search?q=' + encodeURIComponent(keyword) + '&per_page=' + versesPerPage + '&page=';
+                if (versesPage > 1) {
+                    html += '<a class="pagination-prev" href="' + baseQuery + prevPage + '">上一页</a>';
+                } else {
+                    html += '<span class="pagination-disabled">上一页</span>';
+                }
+                html += '<span class="pagination-info"> 第 ' + versesPage + ' 页 / 共 ' + totalPages + ' 页</span>&nbsp;';
+                if (versesPage < totalPages) {
+                    html += '<a class="pagination-next" href="' + baseQuery + nextPage + '">下一页</a>';
+                } else {
+                    html += '<span class="pagination-disabled">下一页</span>';
+                }
+                html += '</div>';
+            }
         }
         
         html += '</div>';
@@ -498,7 +535,10 @@
         
         var hash = window.location.hash || '#/';
         var path = hash.substring(1); // 去掉 #
-        
+    
+        //（已撤销）原先在这里保存当前路由的滚动位置以避免切换时滚动污染，
+        //该逻辑已按用户要求移除，故此处不再执行保存操作。
+
         // 避免重复加载
         if (appState.currentRoute === path && !appState.loading) {
             return;
@@ -535,12 +575,15 @@
                 container.innerHTML = renderBookList(response.data);
                 // 绑定搜索事件
                 bindSearchEvents();
+                //（已撤销）移除恢复路由滚动位置的逻辑，恢复到修改前的行为。
             });
         }
         // 搜索结果页
         else if (parts.length === 1 && parts[0] === 'search') {
-            // 从查询参数获取搜索关键词
+            // 从查询参数获取搜索关键词和分页参数
             var keyword = '';
+            var page = 1;
+            var per_page = 100;
             if (queryString) {
                 // 手动解析查询参数（兼容旧浏览器）
                 var params = queryString.split('&');
@@ -548,7 +591,12 @@
                     var param = params[i].split('=');
                     if (param[0] === 'q' && param[1]) {
                         keyword = decodeURIComponent(param[1]);
-                        break;
+                    }
+                    if ((param[0] === 'page' || param[0] === 'p') && param[1]) {
+                        page = parseInt(param[1], 10) || 1;
+                    }
+                    if ((param[0] === 'per_page' || param[0] === 'limit') && param[1]) {
+                        per_page = parseInt(param[1], 10) || 100;
                     }
                 }
             }
@@ -560,7 +608,8 @@
                 return;
             }
             
-            ajaxGet('/api/search?q=' + encodeURIComponent(keyword), function(err, response) {
+            var apiUrl = '/api/search?q=' + encodeURIComponent(keyword) + '&page=' + page + '&per_page=' + per_page;
+            ajaxGet(apiUrl, function(err, response) {
                 toggleLoading(false);
                 if (err) {
                     showError('搜索失败');
@@ -572,6 +621,10 @@
                 bindSearchEvents();
                 // 绑定经文点击事件
                 bindVerseClickEvents();
+                // 翻页或新搜索后回到顶部（用户要求点下一页要回顶部）
+                try {
+                    window.scrollTo(0, 0);
+                } catch (e) {}
             });
         }
         // 章节列表

@@ -105,9 +105,9 @@ class BibleService {
    * @param {number} limit - 返回结果数量限制
    * @returns {Object} - 包含匹配的书卷和经文
    */
-  static async search(keyword, limit = 100) {
+  static async search(keyword, limit = 100, page = 1) {
     if (!keyword || keyword.trim().length === 0) {
-      return { books: [], verses: [] };
+      return { books: [], verses: { items: [], total: 0, page: 1, per_page: limit } };
     }
 
     const trimmedKeyword = keyword.trim();
@@ -115,12 +115,23 @@ class BibleService {
     // 搜索匹配的书卷（书卷名包含关键词）
     const books = await Book.searchByName(trimmedKeyword);
 
-    // 搜索匹配的经文（经文内容包含关键词）
-    const verses = await Verse.searchByText(trimmedKeyword, limit);
+    // 计算分页
+    const perPage = parseInt(limit) || 100;
+    const currentPage = Math.max(1, parseInt(page) || 1);
+    const offset = (currentPage - 1) * perPage;
+
+    // 搜索匹配的经文（经文内容包含关键词），并获取总数
+    const items = await Verse.searchByText(trimmedKeyword, perPage, offset);
+    const total = await Verse.countByText(trimmedKeyword);
 
     return {
       books: books,
-      verses: verses,
+      verses: {
+        items: items,
+        total: total,
+        page: currentPage,
+        per_page: perPage
+      },
       keyword: trimmedKeyword
     };
   }

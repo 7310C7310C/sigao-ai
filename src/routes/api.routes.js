@@ -82,14 +82,15 @@ router.get('/navigation', async (req, res, next) => {
 
 /**
  * GET /api/search
- * 搜索圣经内容
- * Query: q (关键词), limit (结果数量限制)
+ * 搜索圣经内容（支持分页）
+ * Query: q (关键词), page (页码), per_page (每页条数) 或 limit
  */
 router.get('/search', async (req, res, next) => {
   try {
     const keyword = req.query.q || '';
-    const limit = Number(req.query.limit) || 100;
-    const results = await BibleService.search(keyword, limit);
+    const page = Number(req.query.page) || 1;
+    const perPage = Number(req.query.per_page) || Number(req.query.limit) || 100;
+    const results = await BibleService.search(keyword, perPage, page);
     res.json({
       success: true,
       data: results

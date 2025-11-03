@@ -63,13 +63,17 @@ class Verse {
   /**
    * 根据文本内容搜索经文
    */
-  static async searchByText(keyword, limit = 100) {
-    // 确保 limit 是安全的整数
-    const safeLimit = parseInt(limit) || 100;
-    if (safeLimit < 1 || safeLimit > 1000) {
-      throw new Error('Invalid limit value');
-    }
-    
+  /**
+   * 搜索经文，支持分页
+   * @param {string} keyword
+   * @param {number} limit
+   * @param {number} offset
+   */
+  static async searchByText(keyword, limit = 100, offset = 0) {
+    // 确保 limit/offset 是安全的整数
+    const safeLimit = Math.max(1, Math.min(parseInt(limit) || 100, 100000));
+    const safeOffset = Math.max(0, parseInt(offset) || 0);
+
     const rows = await execute(
       `SELECT v.id, v.book_id, v.chapter, v.verse_ref, v.text, v.line_index,
               b.name_cn as book_name, b.testament
@@ -77,10 +81,21 @@ class Verse {
        LEFT JOIN books b ON v.book_id = b.id 
        WHERE v.text LIKE ? 
        ORDER BY b.order_index, v.chapter, v.line_index
-       LIMIT ${safeLimit}`,
+       LIMIT ${safeLimit} OFFSET ${safeOffset}`,
       [`%${keyword}%`]
     );
     return rows;
+  }
+
+  /**
+   * 返回符合关键词的经文总数
+   */
+  static async countByText(keyword) {
+    const rows = await execute(
+      `SELECT COUNT(*) as total FROM verses v WHERE v.text LIKE ?`,
+      [`%${keyword}%`]
+    );
+    return rows && rows[0] ? rows[0].total : 0;
   }
 }
 
