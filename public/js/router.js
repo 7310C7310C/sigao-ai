@@ -648,6 +648,15 @@
                 triggerRouteChanged();
             });
         }
+        // 最近阅读页面
+        else if (parts.length === 1 && parts[0] === 'recent-reading') {
+            toggleLoading(false);
+            // 不在这里渲染，让 reading-progress.js 处理
+            // 但要触发路由变化事件
+            setTimeout(function() {
+                triggerRouteChanged();
+            }, 50);
+        }
         // 章节列表
         else if (parts.length === 2 && parts[0] === 'book') {
             var bookId = parts[1];

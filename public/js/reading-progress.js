@@ -7,6 +7,8 @@
     'use strict';
     
     var STORAGE_KEY = 'sigao_reading_progress';
+    var HISTORY_KEY = 'sigao_reading_history';
+    var MAX_HISTORY = 100; // 存储最多100条阅读记录
     
     /**
      * 获取当前页面的书卷和章节信息
@@ -101,11 +103,66 @@
                 path: pageInfo.path
             };
             
+            // 保存为继续阅读（单条记录）
             localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+            
+            // 添加到历史记录（多条记录）
+            addToHistory(progress);
         } catch (e) {
             // localStorage 不可用或已满
             console.log('无法保存阅读进度:', e);
         }
+    }
+    
+    /**
+     * 添加到阅读历史记录
+     */
+    function addToHistory(progress) {
+        try {
+            var history = getReadingHistory();
+            
+            // 检查是否已存在相同的记录（同书同章）
+            var existingIndex = -1;
+            for (var i = 0; i < history.length; i++) {
+                if (history[i].bookId === progress.bookId && 
+                    history[i].chapter === progress.chapter) {
+                    existingIndex = i;
+                    break;
+                }
+            }
+            
+            // 如果存在，先移除旧记录
+            if (existingIndex !== -1) {
+                history.splice(existingIndex, 1);
+            }
+            
+            // 添加到开头（最新）
+            history.unshift(progress);
+            
+            // 限制数量
+            if (history.length > MAX_HISTORY) {
+                history = history.slice(0, MAX_HISTORY);
+            }
+            
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        } catch (e) {
+            console.log('无法保存阅读历史:', e);
+        }
+    }
+    
+    /**
+     * 获取阅读历史记录
+     */
+    function getReadingHistory() {
+        try {
+            var data = localStorage.getItem(HISTORY_KEY);
+            if (data) {
+                return JSON.parse(data);
+            }
+        } catch (e) {
+            console.log('无法读取阅读历史:', e);
+        }
+        return [];
     }
     
     /**
@@ -214,7 +271,7 @@
     }
     
     /**
-     * 在首页显示继续阅读卡片
+     * 在首页显示继续阅读和最近阅读卡片
      */
     function showContinueReading() {
         // 只在首页显示（Hash 路由）
@@ -223,44 +280,72 @@
         }
         
         var progress = getReadingProgress();
-        if (!progress) {
+        var history = getReadingHistory();
+        
+        // 如果既没有进度也没有历史，不显示
+        if (!progress && history.length === 0) {
             return;
         }
         
-        // 检查进度是否太旧（超过30天不显示）
-        var now = new Date().getTime();
-        var daysPassed = (now - progress.timestamp) / (1000 * 60 * 60 * 24);
-        if (daysPassed > 30) {
-            return;
+        // 创建容器
+        var cardsContainer = document.createElement('div');
+        cardsContainer.className = 'reading-cards-container';
+        
+        // 继续阅读卡片
+        if (progress) {
+            var now = new Date().getTime();
+            var daysPassed = (now - progress.timestamp) / (1000 * 60 * 60 * 24);
+            
+            // 30天内的才显示
+            if (daysPassed <= 30) {
+                var continueCard = document.createElement('div');
+                continueCard.className = 'continue-reading-card';
+                
+                var displayText = progress.bookName || '未知书卷';
+                displayText += ' 第 ' + progress.chapter + ' 章';
+                
+                continueCard.innerHTML = 
+                    '<div class="continue-reading-content">' +
+                    '<h3 class="continue-reading-title">📖 继续阅读</h3>' +
+                    '<p class="continue-reading-info">' + displayText + '</p>' +
+                    '</div>';
+                
+                continueCard.addEventListener('click', function() {
+                    window.location.hash = progress.path;
+                });
+                
+                cardsContainer.appendChild(continueCard);
+            }
         }
         
-        // 创建继续阅读卡片
-        var card = document.createElement('div');
-        card.className = 'continue-reading-card';
+        // 最近阅读卡片
+        if (history.length > 0) {
+            var recentCard = document.createElement('div');
+            recentCard.className = 'recent-reading-card';
+            
+            var count = history.length;
+            var countText = count + ' 条记录';
+            
+            recentCard.innerHTML = 
+                '<div class="recent-reading-content">' +
+                '<h3 class="recent-reading-title">📚 最近阅读</h3>' +
+                '<p class="recent-reading-info">' + countText + '</p>' +
+                '</div>';
+            
+            recentCard.addEventListener('click', function() {
+                window.location.hash = '#/recent-reading';
+            });
+            
+            cardsContainer.appendChild(recentCard);
+        }
         
-        // 显示格式：书卷名 第 X 章（不显示节号）
-        var displayText = progress.bookName || '未知书卷';
-        displayText += ' 第 ' + progress.chapter + ' 章';
-        
-        card.innerHTML = 
-            '<div class="continue-reading-icon">📖</div>' +
-            '<div class="continue-reading-content">' +
-            '<h3 class="continue-reading-title">继续阅读</h3>' +
-            '<p class="continue-reading-info">' + displayText + '</p>' +
-            '</div>';
-
-        // 点击卡片跳转（使用 Hash 路由）
-        card.addEventListener('click', function() {
-            window.location.hash = progress.path;
-        });
-        
-        // 插入到页面中（在搜索框之后、新约/旧约标题之前）
+        // 插入到页面中
         var container = document.querySelector('.container');
         if (container) {
-            // 先检查是否已存在继续阅读卡片，避免重复插入
-            var existingCard = container.querySelector('.continue-reading-card');
-            if (existingCard) {
-                existingCard.parentNode.removeChild(existingCard);
+            // 先检查是否已存在，避免重复插入
+            var existingContainer = container.querySelector('.reading-cards-container');
+            if (existingContainer) {
+                existingContainer.parentNode.removeChild(existingContainer);
             }
             
             // 查找插入位置：搜索容器之后
@@ -270,18 +355,109 @@
             if (searchContainer) {
                 // 如果有搜索框，插入到搜索框之后
                 if (searchContainer.nextSibling) {
-                    container.insertBefore(card, searchContainer.nextSibling);
+                    container.insertBefore(cardsContainer, searchContainer.nextSibling);
                 } else {
-                    container.appendChild(card);
+                    container.appendChild(cardsContainer);
                 }
             } else if (testamentSection) {
                 // 如果没有搜索框但有书卷分类，插入到分类之前
-                container.insertBefore(card, testamentSection);
+                container.insertBefore(cardsContainer, testamentSection);
             } else {
                 // 否则插入到容器末尾
-                container.appendChild(card);
+                container.appendChild(cardsContainer);
             }
         }
+    }
+    
+    /**
+     * 显示最近阅读列表页面
+     */
+    function showRecentReadingList() {
+        var history = getReadingHistory();
+        
+        var html = '<div class="container">' +
+            '<h1>📚 最近阅读</h1>' +
+            '<div class="breadcrumb">' +
+            '<a href="#/">首页</a> / 最近阅读' +
+            '</div>';
+        
+        if (history.length === 0) {
+            html += '<p>暂无阅读记录</p>';
+        } else {
+            html += '<div class="recent-reading-list">';
+            
+            for (var i = 0; i < history.length; i++) {
+                var item = history[i];
+                var displayText = item.bookName + ' 第 ' + item.chapter + ' 章';
+                var timeText = formatTime(item.timestamp);
+                
+                html += '<div class="recent-reading-item" data-path="' + item.path + '">' +
+                    '<div class="recent-reading-item-icon">📖</div>' +
+                    '<div class="recent-reading-item-content">' +
+                    '<div class="recent-reading-item-title">' + displayText + '</div>' +
+                    '<div class="recent-reading-item-time">' + timeText + '</div>' +
+                    '</div>' +
+                    '</div>';
+            }
+            
+            html += '</div>';
+        }
+        
+        html += '<div class="nav-links">' +
+            '<a href="#/">返回首页</a>' +
+            '</div>' +
+            '</div>';
+        
+        var container = document.getElementById('app-container');
+        if (container) {
+            container.innerHTML = html;
+            
+            // 绑定点击事件
+            var items = container.querySelectorAll('.recent-reading-item');
+            for (var i = 0; i < items.length; i++) {
+                items[i].addEventListener('click', function() {
+                    var path = this.getAttribute('data-path');
+                    if (path) {
+                        window.location.hash = path;
+                    }
+                });
+            }
+        }
+    }
+    
+    /**
+     * 格式化时间显示
+     */
+    function formatTime(timestamp) {
+        var now = new Date().getTime();
+        var diff = now - timestamp;
+        var minutes = Math.floor(diff / (1000 * 60));
+        var hours = Math.floor(diff / (1000 * 60 * 60));
+        var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        
+        if (minutes < 1) {
+            return '刚刚';
+        } else if (minutes < 60) {
+            return minutes + ' 分钟前';
+        } else if (hours < 24) {
+            return hours + ' 小时前';
+        } else if (days < 7) {
+            return days + ' 天前';
+        } else {
+            var date = new Date(timestamp);
+            var year = date.getFullYear();
+            var month = date.getMonth() + 1;
+            var day = date.getDate();
+            return year + '/' + month + '/' + day;
+        }
+    }
+    
+    /**
+     * 检查是否是最近阅读页面
+     */
+    function isRecentReadingPage() {
+        var hash = window.location.hash || '';
+        return hash === '#/recent-reading';
     }
     
     /**
@@ -295,6 +471,9 @@
                 // 章节页面：恢复位置并监听滚动
                 restoreReadingPosition();
                 setupScrollListener();
+            } else if (isRecentReadingPage()) {
+                // 最近阅读页面：显示列表
+                showRecentReadingList();
             } else if (isHomePage()) {
                 // 首页：显示继续阅读卡片
                 showContinueReading();
