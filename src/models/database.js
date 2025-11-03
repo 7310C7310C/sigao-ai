@@ -9,6 +9,15 @@ let pool = null;
 function getPool() {
   if (!pool) {
     pool = mysql.createPool(dbConfig);
+    
+    // 监听连接建立事件，设置时区为中国时区
+    pool.on('connection', function(connection) {
+      connection.query("SET time_zone = '+08:00'", function(err) {
+        if (err) {
+          console.error('[Database] 设置时区失败:', err.message);
+        }
+      });
+    });
   }
   return pool;
 }

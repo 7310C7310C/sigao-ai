@@ -66,29 +66,42 @@ class AIResponse {
     // 生成输入哈希（用于去重和版本控制）
     var inputHash = crypto.createHash('sha256').update(inputText || '').digest('hex');
     
-    // 计算过期时间
-    var ttlExpires = null;
+    // 计算过期时间（使用 DATE_ADD 函数，让数据库自动转换时区）
+    var sql = '';
+    var params = [];
+    
     if (ttlDays && ttlDays > 0) {
-      var expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + ttlDays);
-      ttlExpires = expiresAt.toISOString().slice(0, 19).replace('T', ' ');
+      sql = `
+        INSERT INTO ai_responses_cache 
+          (book_id, chapter, function_type, lang, input_hash, response_json, ttl_expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY))
+      `;
+      params = [
+        bookId,
+        chapter,
+        functionType,
+        lang || 'zh',
+        inputHash,
+        JSON.stringify(responseData),
+        ttlDays
+      ];
+    } else {
+      sql = `
+        INSERT INTO ai_responses_cache 
+          (book_id, chapter, function_type, lang, input_hash, response_json, ttl_expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, NULL)
+      `;
+      params = [
+        bookId,
+        chapter,
+        functionType,
+        lang || 'zh',
+        inputHash,
+        JSON.stringify(responseData)
+      ];
     }
     
-    var sql = `
-      INSERT INTO ai_responses_cache 
-        (book_id, chapter, function_type, lang, input_hash, response_json, ttl_expires_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    
-    var result = await query(sql, [
-      bookId,
-      chapter,
-      functionType,
-      lang || 'zh',
-      inputHash,
-      JSON.stringify(responseData),
-      ttlExpires
-    ]);
+    var result = await query(sql, params);
     
     return result.insertId;
   }

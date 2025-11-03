@@ -274,7 +274,7 @@
                             <td>
                                 <div class="content-preview"><%= result.content_preview %></div>
                             </td>
-                            <td><%= result.created_at %></td>
+                            <td><%= typeof result.created_at === 'string' ? result.created_at : new Date(result.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) %></td>
                             <td>
                                 <button class="view-btn" onclick="viewContent(<%= result.id %>)">查看</button>
                                 <button class="delete-btn" onclick="confirmDelete(<%= result.id %>, '<%= result.book_name %>', <%= result.chapter %>, '<%= result.function_type %>')">删除</button>

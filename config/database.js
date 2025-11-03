@@ -7,13 +7,9 @@ module.exports = {
   password: process.env.DB_PASS || 'sigao',
   database: process.env.DB_NAME || 'sigao_ai',
   charset: 'utf8mb4',
-  collation: 'utf8mb4_unicode_ci',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  // 连接选项
-  connectionOptions: {
-    charset: 'utf8mb4',
-    sql_mode: 'TRADITIONAL'
-  }
+  // 设置时区为中国时区（UTC+8），所有时间函数（NOW(), CURRENT_TIMESTAMP）将返回中国时间
+  timezone: '+08:00'
 };
