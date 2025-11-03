@@ -46,6 +46,22 @@
     }
     
     /**
+     * 触发路由变化事件（供其他模块监听）
+     */
+    function triggerRouteChanged() {
+        // 使用 CustomEvent（旧浏览器兼容处理）
+        var event;
+        if (typeof window.CustomEvent === 'function') {
+            event = new CustomEvent('routeChanged', { detail: { route: appState.currentRoute } });
+        } else {
+            // IE 9-11 兼容
+            event = document.createEvent('CustomEvent');
+            event.initCustomEvent('routeChanged', false, false, { route: appState.currentRoute });
+        }
+        document.dispatchEvent(event);
+    }
+    
+    /**
      * AJAX 请求封装（兼容旧浏览器）
      */
     function ajaxGet(url, callback) {
@@ -575,7 +591,10 @@
                 container.innerHTML = renderBookList(response.data);
                 // 绑定搜索事件
                 bindSearchEvents();
-                //（已撤销）移除恢复路由滚动位置的逻辑，恢复到修改前的行为。
+                // 渲染完成后滚动到顶部
+                window.scrollTo(0, 0);
+                // 触发路由变化事件
+                triggerRouteChanged();
             });
         }
         // 搜索结果页
@@ -625,6 +644,8 @@
                 try {
                     window.scrollTo(0, 0);
                 } catch (e) {}
+                // 触发路由变化事件
+                triggerRouteChanged();
             });
         }
         // 章节列表
@@ -638,6 +659,10 @@
                     return;
                 }
                 container.innerHTML = renderChapterList(response.data, bookId);
+                // 渲染完成后滚动到顶部
+                window.scrollTo(0, 0);
+                // 触发路由变化事件
+                triggerRouteChanged();
             });
         }
         // 经文内容
@@ -663,6 +688,9 @@
                         
                         // 检查是否需要滚动到特定经文（从搜索结果跳转过来）
                         scrollToVerseIfNeeded();
+                        
+                        // 触发路由变化事件
+                        triggerRouteChanged();
                         
                         // 页面渲染完成后预读上一章和下一章
                         setTimeout(function() {
@@ -694,6 +722,7 @@
         else {
             toggleLoading(false);
             container.innerHTML = '<div class="container"><h1>404</h1><p>页面不存在</p><a href="#/">返回首页</a></div>';
+            window.scrollTo(0, 0);
         }
     }
     
@@ -977,6 +1006,9 @@
                 var aiResult = document.getElementById('ai-result');
                 if (aiResult && aiResult.style.display !== 'none') {
                     aiResult.style.display = 'none';
+                    // 恢复 body 滚动
+                    document.body.style.overflow = '';
+                    document.body.style.position = '';
                     e.preventDefault();
                 }
             }
@@ -1065,6 +1097,9 @@
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
                 resultBox.style.display = 'none';
+                // 恢复 body 滚动
+                document.body.style.overflow = '';
+                document.body.style.position = '';
                 // 移除激活状态
                 var buttons = document.querySelectorAll('.ai-btn');
                 for (var k = 0; k < buttons.length; k++) {
@@ -1084,6 +1119,9 @@
                 // 如果点击的是当前激活按钮，关闭结果框
                 if (this === activeButton && resultBox.style.display !== 'none') {
                     resultBox.style.display = 'none';
+                    // 恢复 body 滚动
+                    document.body.style.overflow = '';
+                    document.body.style.position = '';
                     this.classList.remove('active');
                     activeButton = null;
                 } else {
@@ -1119,6 +1157,11 @@
         function showCachedContent(functionType, content) {
             // 显示缓存内容（秒开）
             resultBox.style.display = 'block';
+            // 禁止 body 滚动，防止滚动污染
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            
             resultTitle.textContent = functionNames[functionType];
             resultContent.innerHTML = formatAIResponse(content);
             resultContent.style.display = 'block';
@@ -1132,6 +1175,11 @@
         function requestAI(functionType, bookId, chapter, cacheKey, forceRegenerate) {
             // 显示结果框和加载状态
             resultBox.style.display = 'block';
+            // 禁止 body 滚动，防止滚动污染
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            
             resultTitle.textContent = functionNames[functionType] + (forceRegenerate ? ' (重新生成中...)' : '');
             resultContent.style.display = 'none';
             resultError.style.display = 'none';

@@ -193,6 +193,11 @@
             return;
         }
         
+        // 进入页面后立即保存一次进度
+        setTimeout(function() {
+            saveReadingProgress();
+        }, 500); // 等待页面渲染完成
+        
         var scrollTimeout;
         var saveDelay = 1000; // 1秒后保存
         
@@ -290,10 +295,20 @@
                 restoreReadingPosition();
                 setupScrollListener();
             } else if (isHomePage()) {
-                // 首页：显示继续阅读（不自动回顶部）
+                // 首页：显示继续阅读卡片
                 showContinueReading();
             }
-        }, 100);
+        }, 150); // 增加延迟，确保 DOM 已渲染
+    }
+    
+    /**
+     * 监听 router.js 的自定义事件
+     */
+    function setupRouterListener() {
+        // 监听 router.js 触发的路由完成事件
+        document.addEventListener('routeChanged', function() {
+            handleRouteChange();
+        });
     }
     
     /**
@@ -302,6 +317,9 @@
     function init() {
         // 监听 Hash 路由变化
         window.addEventListener('hashchange', handleRouteChange);
+        
+        // 监听 router.js 的自定义事件
+        setupRouterListener();
         
         // 初始化时执行一次
         if (document.readyState === 'loading') {

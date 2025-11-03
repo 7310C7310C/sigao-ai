@@ -615,7 +615,7 @@ body.dark-mode .continue-reading-card:hover {
 }
 
 .verse-text {
-    color: #34495e;
+    color: #000;
 }
 
 /* 经文页面容器 - 添加底部 padding 避免被 AI 按钮遮挡 */
@@ -650,7 +650,7 @@ body.dark-mode .continue-reading-card:hover {
 
 .verse-text {
     display: inline;
-    color: #2c3e50;
+    color: #000;
     line-height: 1.6;
 }
 
@@ -1406,8 +1406,8 @@ body.dark-mode .ai-close-btn:hover {
 
 /* AI 结果内容 - Markdown 样式 */
 .ai-result-content {
-    color: #333;
-    line-height: 1.8;
+    color: #000;
+    line-height: 1.5;
     font-size: 1rem;
 }
 
