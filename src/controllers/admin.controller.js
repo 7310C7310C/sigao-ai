@@ -1,5 +1,6 @@
 const ImportService = require('../services/import.service');
 const AIPrompt = require('../models/AIPrompt');
+const AIResponse = require('../models/AIResponse');
 const Logger = require('../utils/logger');
 
 /**
@@ -7,10 +8,21 @@ const Logger = require('../utils/logger');
  */
 class AdminController {
   /**
-   * 显示管理页面
+   * 显示管理页面（仅按钮导航）
    */
   static async showAdminPage(req, res) {
-    res.render('admin/index', { message: null });
+    res.render('admin/index', { 
+      message: req.query.message || null 
+    });
+  }
+
+  /**
+   * 显示圣经导入页面
+   */
+  static async showImportPage(req, res) {
+    res.render('admin/import', { 
+      message: req.query.message || null 
+    });
   }
 
   /**
@@ -26,12 +38,12 @@ class AdminController {
       
       const result = await ImportService.importFromExcel(req.file.path);
       
-      res.render('admin/index', { 
+      res.render('admin/import', { 
         message: `成功导入 ${result.rowCount} 行数据，共 ${result.verseCount} 条经文` 
       });
     } catch (error) {
       Logger.error('上传处理失败:', error);
-      res.render('admin/index', { 
+      res.render('admin/import', { 
         message: `错误: ${error.message}` 
       });
     }
@@ -120,6 +132,64 @@ class AdminController {
     } catch (error) {
       Logger.error('切换提示词状态失败:', error);
       res.redirect('/admin/prompts?message=' + encodeURIComponent('错误: ' + error.message));
+    }
+  }
+  
+  /**
+   * 显示 AI 结果管理页面
+   */
+  static async showAIResultsPage(req, res) {
+    try {
+      var results = await AIResponse.getAllForAdmin();
+      var stats = await AIResponse.getStats();
+      
+      res.render('admin/ai-results', {
+        message: req.query.message || null,
+        results: results,
+        stats: stats
+      });
+    } catch (error) {
+      Logger.error('获取 AI 结果列表失败:', error);
+      res.render('admin/ai-results', {
+        message: '错误: ' + error.message,
+        results: [],
+        stats: { total: 0, summary: 0, history: 0, saints: 0, prayer: 0 }
+      });
+    }
+  }
+  
+  /**
+   * 删除单条 AI 结果
+   */
+  static async deleteAIResult(req, res) {
+    try {
+      var id = parseInt(req.params.id);
+      var deleted = await AIResponse.deleteById(id);
+      
+      if (deleted > 0) {
+        Logger.info('AI 结果删除成功: ID=' + id);
+        res.redirect('/admin/ai-results?message=' + encodeURIComponent('✅ 删除成功'));
+      } else {
+        res.redirect('/admin/ai-results?message=' + encodeURIComponent('记录不存在'));
+      }
+    } catch (error) {
+      Logger.error('删除 AI 结果失败:', error);
+      res.redirect('/admin/ai-results?message=' + encodeURIComponent('错误: ' + error.message));
+    }
+  }
+  
+  /**
+   * 清空所有 AI 结果缓存
+   */
+  static async clearAllAIResults(req, res) {
+    try {
+      await AIResponse.truncate();
+      
+      Logger.info('AI 结果缓存已清空');
+      res.redirect('/admin/ai-results?message=' + encodeURIComponent('✅ 已清空所有缓存'));
+    } catch (error) {
+      Logger.error('清空 AI 结果缓存失败:', error);
+      res.redirect('/admin/ai-results?message=' + encodeURIComponent('错误: ' + error.message));
     }
   }
 }

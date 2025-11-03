@@ -7,8 +7,64 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>管理后台 - 导入圣经数据</title>
+    <title>管理后台</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .admin-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .admin-feature-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            min-height: 180px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .admin-feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            text-decoration: none;
+            color: white;
+        }
+        .admin-feature-card:nth-child(1) {
+            background: linear-gradient(135deg, #5f72e4 0%, #8e54e9 100%);
+        }
+        .admin-feature-card:nth-child(2) {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .admin-feature-card:nth-child(3) {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .admin-feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .admin-feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .admin-feature-desc {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .admin-features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -20,30 +76,25 @@
             </div>
         <% } %>
         
-        <!-- 功能导航 -->
-        <div class="admin-nav-grid">
-            <a href="/admin/prompts" class="admin-nav-btn">
-                <span class="admin-nav-label">提示词管理</span>
+        <div class="admin-features">
+            <a href="/admin/prompts" class="admin-feature-card">
+                <div class="admin-feature-icon">💬</div>
+                <div class="admin-feature-title">提示词管理</div>
+                <div class="admin-feature-desc">管理 AI 生成功能的提示词模板</div>
             </a>
-            <a href="/admin" class="admin-nav-btn active">
-                <span class="admin-nav-label">圣经导入</span>
+            
+            <a href="/admin/import" class="admin-feature-card">
+                <div class="admin-feature-icon">📤</div>
+                <div class="admin-feature-title">圣经导入</div>
+                <div class="admin-feature-desc">从 Excel 文件导入圣经数据</div>
+            </a>
+            
+            <a href="/admin/ai-results" class="admin-feature-card">
+                <div class="admin-feature-icon">🤖</div>
+                <div class="admin-feature-title">AI 结果管理</div>
+                <div class="admin-feature-desc">查看和管理 AI 生成结果缓存</div>
             </a>
         </div>
-        
-        <h2>导入 Excel 数据</h2>
-        
-        <form method="post" action="/admin/upload" enctype="multipart/form-data">
-            <p>
-                <label for="file">选择 Excel 文件：</label>
-                <input type="file" id="file" name="file" accept=".xlsx,.xls,.csv" required />
-            </p>
-            <p>
-                <button type="submit">📤 上传并导入</button>
-            </p>
-            <p style="color: #e74c3c; font-size: 0.9rem;">
-                ⚠️ 注意：导入将会清空现有的所有圣经数据
-            </p>
-        </form>
         
         <div class="nav-links">
             <a href="/">返回首页</a>

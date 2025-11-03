@@ -116,6 +116,143 @@ class AIResponse {
   static async truncate() {
     await query('TRUNCATE TABLE ai_responses_cache');
   }
+  
+  /**
+   * 获取所有 AI 响应缓存记录（用于管理后台）
+   * @returns {Promise<Array>} - 缓存记录列表
+   */
+  static async getAllForAdmin() {
+    var sql = `
+      SELECT 
+        arc.id,
+        arc.book_id,
+        arc.chapter,
+        arc.function_type,
+        arc.lang,
+        arc.response_json,
+        arc.created_at,
+        b.name_cn as book_name
+      FROM ai_responses_cache arc
+      LEFT JOIN books b ON arc.book_id = b.id
+      ORDER BY arc.created_at DESC
+    `;
+    
+    var rows = await query(sql);
+    
+    return rows.map(function(row) {
+      var responseJson = row.response_json;
+      
+      // 解析 JSON
+      if (typeof responseJson === 'string') {
+        try {
+          responseJson = JSON.parse(responseJson);
+        } catch (e) {
+          responseJson = { content: '' };
+        }
+      }
+      
+      var content = responseJson.content || '';
+      var contentPreview = content.substring(0, 100) + (content.length > 100 ? '...' : '');
+      
+      return {
+        id: row.id,
+        book_id: row.book_id,
+        book_name: row.book_name,
+        chapter: row.chapter,
+        function_type: row.function_type,
+        lang: row.lang,
+        content: content,
+        content_preview: contentPreview,
+        created_at: row.created_at
+      };
+    });
+  }
+  
+  /**
+   * 根据 ID 获取单条 AI 响应
+   * @param {number} id - 记录 ID
+   * @returns {Promise<object|null>}
+   */
+  static async getById(id) {
+    var sql = `
+      SELECT 
+        arc.*,
+        b.name_cn as book_name
+      FROM ai_responses_cache arc
+      LEFT JOIN books b ON arc.book_id = b.id
+      WHERE arc.id = ?
+    `;
+    
+    var rows = await query(sql, [id]);
+    
+    if (rows && rows.length > 0) {
+      var row = rows[0];
+      var responseJson = row.response_json;
+      
+      if (typeof responseJson === 'string') {
+        try {
+          responseJson = JSON.parse(responseJson);
+        } catch (e) {
+          responseJson = { content: '' };
+        }
+      }
+      
+      return {
+        id: row.id,
+        book_id: row.book_id,
+        book_name: row.book_name,
+        chapter: row.chapter,
+        function_type: row.function_type,
+        lang: row.lang,
+        content: responseJson.content || '',
+        citations: responseJson.citations || [],
+        created_at: row.created_at
+      };
+    }
+    
+    return null;
+  }
+  
+  /**
+   * 根据 ID 删除单条记录
+   * @param {number} id - 记录 ID
+   * @returns {Promise<number>} - 删除的行数
+   */
+  static async deleteById(id) {
+    var sql = 'DELETE FROM ai_responses_cache WHERE id = ?';
+    var result = await query(sql, [id]);
+    return result.affectedRows;
+  }
+  
+  /**
+   * 获取统计信息
+   * @returns {Promise<object>}
+   */
+  static async getStats() {
+    var sql = `
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN function_type = 'summary' THEN 1 ELSE 0 END) as summary,
+        SUM(CASE WHEN function_type = 'history' THEN 1 ELSE 0 END) as history,
+        SUM(CASE WHEN function_type = 'saints' THEN 1 ELSE 0 END) as saints,
+        SUM(CASE WHEN function_type = 'prayer' THEN 1 ELSE 0 END) as prayer
+      FROM ai_responses_cache
+    `;
+    
+    var rows = await query(sql);
+    
+    if (rows && rows.length > 0) {
+      return {
+        total: rows[0].total || 0,
+        summary: rows[0].summary || 0,
+        history: rows[0].history || 0,
+        saints: rows[0].saints || 0,
+        prayer: rows[0].prayer || 0
+      };
+    }
+    
+    return { total: 0, summary: 0, history: 0, saints: 0, prayer: 0 };
+  }
 }
 
 module.exports = AIResponse;

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>AI 结果管理 - 管理后台</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-bar select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .clear-all-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s ease;
+        }
+        .clear-all-btn:hover {
+            background: #c0392b;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .results-table th,
+        .results-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .results-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+        .view-btn, .delete-btn {
+            padding: 0.35rem 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-right: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .view-btn {
+            background: #3498db;
+            color: white;
+        }
+        .view-btn:hover {
+            background: #2980b9;
+        }
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        .content-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        .function-type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .badge-summary { background: #e3f2fd; color: #1976d2; }
+        .badge-history { background: #f3e5f5; color: #7b1fa2; }
+        .badge-saints { background: #fff3e0; color: #e65100; }
+        .badge-prayer { background: #e8f5e9; color: #2e7d32; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+        .modal-close:hover {
+            background: #bdbdbd;
+        }
+        .markdown-content {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .stat-card {
+            flex: 1;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .results-table {
+                font-size: 0.85rem;
+            }
+            .content-preview {
+                max-width: 150px;
+            }
+            .modal-content {
+                padding: 1rem;
+            }
+            .stats {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI 结果管理</h1>
+        
+        <% if (message) { %>
+            <div class="message <%= message.indexOf('错误') >= 0 || message.indexOf('Error') >= 0 ? 'error' : 'success' %>">
+                <%= message %>
+            </div>
+        <% } %>
+        
+        <!-- 统计信息 -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value"><%= stats.total %></div>
+                <div class="stat-label">总缓存记录</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="stat-value"><%= stats.summary %></div>
+                <div class="stat-label">经文总结</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="stat-value"><%= stats.history %></div>
+                <div class="stat-label">历史背景</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="stat-value"><%= stats.saints %></div>
+                <div class="stat-label">圣人诠释</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="stat-value"><%= stats.prayer %></div>
+                <div class="stat-label">祈祷指引</div>
+            </div>
+        </div>
+        
+        <!-- 筛选和操作栏 -->
+        <div class="filter-bar">
+            <select id="functionTypeFilter" onchange="filterResults()">
+                <option value="">全部类型</option>
+                <option value="summary">经文总结</option>
+                <option value="history">历史背景</option>
+                <option value="saints">圣人诠释</option>
+                <option value="prayer">祈祷指引</option>
+            </select>
+            
+            <button class="clear-all-btn" onclick="confirmClearAll()">🗑️ 清空所有缓存</button>
+        </div>
+        
+        <!-- 结果列表 -->
+        <% if (results.length === 0) { %>
+            <p style="text-align: center; color: #999; padding: 2rem;">暂无 AI 结果缓存</p>
+        <% } else { %>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>书卷</th>
+                        <th>章节</th>
+                        <th>类型</th>
+                        <th>内容预览</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% results.forEach(function(result) { %>
+                        <tr data-function-type="<%= result.function_type %>">
+                            <td><%= result.id %></td>
+                            <td><%= result.book_name || '未知' %></td>
+                            <td>第 <%= result.chapter %> 章</td>
+                            <td>
+                                <span class="function-type-badge badge-<%= result.function_type %>">
+                                    <%= result.function_type === 'summary' ? '经文总结' : 
+                                        result.function_type === 'history' ? '历史背景' : 
+                                        result.function_type === 'saints' ? '圣人诠释' : 
+                                        result.function_type === 'prayer' ? '祈祷指引' : result.function_type %>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="content-preview"><%= result.content_preview %></div>
+                            </td>
+                            <td><%= result.created_at %></td>
+                            <td>
+                                <button class="view-btn" onclick="viewContent(<%= result.id %>)">查看</button>
+                                <button class="delete-btn" onclick="confirmDelete(<%= result.id %>, '<%= result.book_name %>', <%= result.chapter %>, '<%= result.function_type %>')">删除</button>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        <% } %>
+        
+        <div class="nav-links">
+            <a href="/admin">返回管理后台</a>
+            <a href="/">返回首页</a>
+        </div>
+    </div>
+    
+    <!-- 查看内容模态框 -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <h2 id="modalTitle">AI 结果详情</h2>
+            <div id="modalContent" class="markdown-content"></div>
+        </div>
+    </div>
+    
+    <script src="/js/main.js"></script>
+    <script>
+        var allResults = <%- JSON.stringify(results) %>;
+        
+        function filterResults() {
+            var filterType = document.getElementById('functionTypeFilter').value;
+            var rows = document.querySelectorAll('.results-table tbody tr');
+            
+            rows.forEach(function(row) {
+                var rowType = row.getAttribute('data-function-type');
+                if (!filterType || rowType === filterType) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        function viewContent(id) {
+            var result = allResults.find(function(r) { return r.id === id; });
+            if (!result) return;
+            
+            var typeNames = {
+                'summary': '经文总结',
+                'history': '历史背景',
+                'saints': '圣人诠释',
+                'prayer': '祈祷指引'
+            };
+            
+            document.getElementById('modalTitle').textContent = 
+                result.book_name + ' 第 ' + result.chapter + ' 章 - ' + (typeNames[result.function_type] || result.function_type);
+            
+            var content = result.content || '无内容';
+            document.getElementById('modalContent').textContent = content;
+            
+            document.getElementById('viewModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('viewModal').classList.remove('active');
+        }
+        
+        function confirmDelete(id, bookName, chapter, functionType) {
+            var typeNames = {
+                'summary': '经文总结',
+                'history': '历史背景',
+                'saints': '圣人诠释',
+                'prayer': '祈祷指引'
+            };
+            
+            if (confirm('确定要删除 ' + bookName + ' 第 ' + chapter + ' 章的 ' + (typeNames[functionType] || functionType) + ' 吗？')) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/ai-results/delete/' + id;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        function confirmClearAll() {
+            if (confirm('⚠️ 警告：此操作将清空所有 AI 结果缓存，无法恢复！\n\n确定要继续吗？')) {
+                if (confirm('再次确认：真的要清空所有缓存吗？')) {
+                    var form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/admin/ai-results/clear-all';
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            }
+        }
+        
+        // 点击模态框背景关闭
+        document.getElementById('viewModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // ESC 键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

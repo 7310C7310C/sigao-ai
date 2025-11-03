@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>圣经导入 - 管理后台</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📤 圣经导入</h1>
+        
+        <% if (message) { %>
+            <div class="message <%= message.indexOf('错误') >= 0 || message.indexOf('Error') >= 0 ? 'error' : 'success' %>">
+                <%= message %>
+            </div>
+        <% } %>
+        
+        <h2>导入 Excel 数据</h2>
+        
+        <form method="post" action="/admin/import/upload" enctype="multipart/form-data">
+            <p>
+                <label for="file">选择 Excel 文件：</label>
+                <input type="file" id="file" name="file" accept=".xlsx,.xls,.csv" required />
+            </p>
+            <p>
+                <button type="submit">📤 上传并导入</button>
+            </p>
+            <p style="color: #e74c3c; font-size: 0.9rem;">
+                ⚠️ 注意：导入将会清空现有的所有圣经数据
+            </p>
+        </form>
+        
+        <div class="nav-links">
+            <a href="/admin">返回管理后台</a>
+            <a href="/">返回首页</a>
+        </div>
+    </div>
+    <script src="/js/main.js"></script>
+</body>
+</html>
