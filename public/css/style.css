@@ -480,6 +480,9 @@ form {
     font-weight: 600;
     color: #ffffff;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .continue-reading-info,
@@ -608,29 +611,133 @@ body.dark-mode .recent-reading-item-time {
 
 /* 响应式 */
 @media (max-width: 480px) {
+    /* 手机端：尽量保持卡片同行显示（并允许紧缩），避免换行 */
     .reading-cards-container {
-        -webkit-box-orient: vertical;
+        -webkit-box-orient: horizontal;
         -webkit-box-direction: normal;
-        -webkit-flex-direction: column;
-        -ms-flex-direction: column;
-        flex-direction: column;
-        gap: 0.75rem;
+        -webkit-flex-direction: row;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-flex-wrap: nowrap;
+        -ms-flex-wrap: nowrap;
+        flex-wrap: nowrap; /* 强制同行 */
+        gap: 0.5rem;
+        align-items: stretch;
     }
-    
+
     .continue-reading-card,
     .recent-reading-card {
-        padding: 1rem;
+        padding: 0.6rem; /* 更小的内边距，减少长文本引起的换行 */
+        -webkit-box-flex: 1;
+        -webkit-flex: 1 1 calc(50% - 0.25rem);
+        -ms-flex: 1 1 calc(50% - 0.25rem);
+        flex: 1 1 calc(50% - 0.25rem); /* 更明确的占比并留出间隙 */
+        min-width: 0; /* 允许压缩，不强制换行 */
+        box-sizing: border-box;
     }
     
     .continue-reading-title,
     .recent-reading-title {
         font-size: 0.95rem;
     }
+
+    /* 更紧凑的卡片内部间距与文字处理，防止标题换行 */
+    .continue-reading-content,
+    .recent-reading-content {
+        gap: 0.15rem;
+    }
+
+    .continue-reading-title,
+    .recent-reading-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* 确保容器不换行并隐藏可能的横向溢出 */
+    .reading-cards-container {
+        -webkit-flex-wrap: nowrap;
+        -ms-flex-wrap: nowrap;
+        flex-wrap: nowrap;
+        overflow-x: hidden;
+    }
     
     .continue-reading-info,
     .recent-reading-info {
         font-size: 0.85rem;
     }
+}
+
+/* 约分组的折叠样式 */
+.testament-toggle {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.testament-title .testament-toggle {
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    /* 减小按钮上下内边距（视觉更紧凑），但保留最小点击区 */
+    padding: 0.5rem 1rem;
+    min-height: 44px; /* 保持触摸目标不低于 44px */
+    box-sizing: border-box;
+}
+
+.testament-title .testament-toggle .caret {
+    font-size: 1.9rem; /* 更大的 caret，用户要求再大点 */
+    line-height: 1;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 0.25rem;
+}
+
+.testament-content {
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+}
+
+.testament-content.collapsed {
+    max-height: 0 !important;
+}
+
+/* 移除 testament-toggle 的 hover/active 视觉变化（避免继承全局 button 样式） */
+.testament-toggle:hover,
+.testament-toggle:active {
+    background: transparent !important;
+    color: inherit !important;
+    -webkit-transform: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* 保留 focus 可访问性指示 */
+.testament-toggle:focus {
+    /* 用户要求：点击后不显示框线（移除视觉边框） */
+    outline: none;
+    box-shadow: none;
+}
+
+/* 移除 Firefox 内部按钮边框 */
+.testament-toggle::-moz-focus-inner {
+    border: 0;
+}
+
+/* 移除触摸高亮 */
+.testament-toggle {
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* 搜索结果区域 */
@@ -851,11 +958,23 @@ body.dark-mode .recent-reading-item-time {
     margin-bottom: 3rem;
 }
 
+/* 当分组被折叠时，减小与下一组的垂直间距，使视觉更紧凑 */
+.testament-section.collapsed {
+    margin-bottom: 0.04rem; /* 更紧凑：尽量靠近（接近 0） */
+}
+
+/* 折叠状态下仅缩小标题下面的外边距（不改变 padding），以避免按钮高度变化
+   同时让折叠后的分组更靠近 */
+.testament-section.collapsed .testament-title {
+    margin-bottom: 0.06rem; /* 减到更小的外边距 */
+}
+
 .testament-title {
     font-size: 1.75rem;
     color: #2c3e50;
     margin-bottom: 1.5rem;
-    padding: 0.75rem 1rem;
+    /* 减小上下内边距，但保留触摸目标高度由按钮的 min-height 控制 */
+    padding: 0.5rem 1rem;
     background: -webkit-linear-gradient(left, #3498db, #2980b9);
     background: -moz-linear-gradient(left, #3498db, #2980b9);
     background: linear-gradient(to right, #3498db, #2980b9);
@@ -1019,7 +1138,10 @@ body.dark-mode .recent-reading-item-time {
     
     h1 {
         font-size: 1.5rem;
-        margin-bottom: 1rem;
+            font-size: 0.95rem;
+            white-space: nowrap; /* 不换行 */
+            overflow: hidden;
+            text-overflow: ellipsis;
     }
     
     h2 {
@@ -1095,6 +1217,12 @@ body.dark-mode .recent-reading-item-time {
         font-size: 0.95rem;
     }
     
+
+        /* 减小卡片内部字体在超窄屏时以避免换行 */
+        .continue-reading-card .continue-reading-info,
+        .recent-reading-card .recent-reading-info {
+            font-size: 0.82rem;
+        }
     /* 手机端导航平分空间 */
     .nav-links {
         display: -webkit-box;

@@ -177,16 +177,18 @@
         html += '<div id="search-suggestions" class="search-suggestions" style="display: none;"></div>';
         html += '</div>';
         
-        // 渲染新约
+        // 渲染新约（可折叠，默认展开）
         if (testaments['新约'] && Object.keys(testaments['新约']).length > 0) {
             html += '<div class="testament-section">';
-            html += '<h2 class="testament-title">新约</h2>';
-            
+            // 使用可点击的 button 控制折叠，保留原有样式外观
+            html += '<h2 class="testament-title"><button class="testament-toggle" aria-expanded="true" data-testament="新约">新约 <span class="caret">▾</span></button></h2>';
+            html += '<div class="testament-content" data-testament="新约">';
+
             for (var bookType in testaments['新约']) {
                 html += '<div class="book-type-section">';
                 html += '<h3 class="book-type-title">' + bookType + '</h3>';
                 html += '<ul class="book-list">';
-                
+
                 var booksList = testaments['新约'][bookType];
                 for (var j = 0; j < booksList.length; j++) {
                     var book = booksList[j];
@@ -194,24 +196,26 @@
                     html += '<a href="#/book/' + book.id + '">' + book.name_cn + '</a>';
                     html += '</li>';
                 }
-                
+
                 html += '</ul>';
                 html += '</div>';
             }
-            
+
+            html += '</div>'; // testament-content
             html += '</div>';
         }
         
-        // 渲染旧约
+        // 渲染旧约（可折叠，默认展开）
         if (testaments['旧约'] && Object.keys(testaments['旧约']).length > 0) {
             html += '<div class="testament-section">';
-            html += '<h2 class="testament-title">旧约</h2>';
-            
+            html += '<h2 class="testament-title"><button class="testament-toggle" aria-expanded="true" data-testament="旧约">旧约 <span class="caret">▾</span></button></h2>';
+            html += '<div class="testament-content" data-testament="旧约">';
+
             for (var bookType in testaments['旧约']) {
                 html += '<div class="book-type-section">';
                 html += '<h3 class="book-type-title">' + bookType + '</h3>';
                 html += '<ul class="book-list">';
-                
+
                 var booksList = testaments['旧约'][bookType];
                 for (var j = 0; j < booksList.length; j++) {
                     var book = booksList[j];
@@ -219,17 +223,114 @@
                     html += '<a href="#/book/' + book.id + '">' + book.name_cn + '</a>';
                     html += '</li>';
                 }
-                
+
                 html += '</ul>';
                 html += '</div>';
             }
-            
+
+            html += '</div>'; // testament-content
             html += '</div>';
         }
         
         html += '</div>';
         
         return html;
+    }
+
+    /**
+     * 初始化 新约/旧约 折叠开关
+     * 默认展开，支持无障碍 aria-expanded
+     */
+    function initTestamentToggles() {
+        try {
+            var toggles = document.querySelectorAll('.testament-toggle');
+            for (var i = 0; i < toggles.length; i++) {
+                (function(btn) {
+                    // 查找对应内容区域
+                    var testament = btn.getAttribute('data-testament');
+                    var content = document.querySelector('.testament-content[data-testament="' + testament + '"]');
+
+                    // 确保内容有过渡准备
+                    if (content) {
+                        content.style.overflow = 'hidden';
+                        content.style.transition = 'max-height 0.25s ease';
+                        // 默认展开：设置合适的 max-height
+                        try {
+                            content.style.maxHeight = content.scrollHeight + 'px';
+                        } catch (e) {
+                            content.style.maxHeight = 'none';
+                        }
+                    }
+
+                    // 点击切换
+                    btn.addEventListener('click', function() {
+                        var expanded = btn.getAttribute('aria-expanded') === 'true';
+                        if (!content) return;
+
+                        // 找到父级 testament-section（兼容旧浏览器）
+                        var section = btn.parentNode;
+                        while (section && section.nodeType === 1 && section.className.indexOf('testament-section') === -1) {
+                            section = section.parentNode;
+                        }
+
+                        // 清理之前可能残留的 transitionend 监听器
+                        var onTransitionEnd = function() {};
+
+                        if (expanded) {
+                            // 折叠：从当前高度平滑过渡到 0
+                            btn.setAttribute('aria-expanded', 'false');
+                            var caret = btn.querySelector('.caret'); if (caret) caret.textContent = '▸';
+
+                            try {
+                                // 确保起始 maxHeight 为当前实际高度（像素），避免 jump
+                                content.style.maxHeight = content.scrollHeight + 'px';
+                            } catch (e) {
+                                content.style.maxHeight = '0px';
+                            }
+
+                            // 强制回流，确保浏览器应用上面的 maxHeight
+                            content.offsetHeight;
+
+                            // 在 transition 结束后添加 collapsed 类（这样不会影响动画进行中的布局）
+                            onTransitionEnd = function(ev) {
+                                if (ev && ev.propertyName !== 'max-height') return;
+                                try { if (section && section.classList) section.classList.add('collapsed'); } catch (e) {}
+                                content.removeEventListener('transitionend', onTransitionEnd);
+                            };
+                            content.addEventListener('transitionend', onTransitionEnd);
+
+                            // 然后触发折叠动画
+                            content.style.maxHeight = '0px';
+                        } else {
+                            // 展开：立即移除 collapsed 类，计算内容高度并展开
+                            btn.setAttribute('aria-expanded', 'true');
+                            var caret = btn.querySelector('.caret'); if (caret) caret.textContent = '▾';
+
+                            try { if (section && section.classList) section.classList.remove('collapsed'); } catch (e) {}
+
+                            // 先把 maxHeight 设为 0（在某些浏览器中需要），然后强制回流后再设为 scrollHeight
+                            content.style.maxHeight = '0px';
+                            content.offsetHeight; // 强制回流
+                            content.style.maxHeight = content.scrollHeight + 'px';
+
+                            // 可选：在展开完成后移除 maxHeight 限制以支持内容内部动态变化
+                            onTransitionEnd = function(ev) {
+                                if (ev && ev.propertyName !== 'max-height') return;
+                                try {
+                                    // 允许高度自适应
+                                    content.style.maxHeight = '';
+                                } catch (e) {}
+                                content.removeEventListener('transitionend', onTransitionEnd);
+                            };
+                            content.addEventListener('transitionend', onTransitionEnd);
+                        }
+                    });
+                })(toggles[i]);
+            }
+        } catch (e) {
+            // 安全降级：不影响主逻辑
+            console.log('initTestamentToggles error', e);
+        }
     }
     
     /**
@@ -591,6 +692,10 @@
                 container.innerHTML = renderBookList(response.data);
                 // 绑定搜索事件
                 bindSearchEvents();
+                // 初始化 新约/旧约 折叠控制
+                if (typeof initTestamentToggles === 'function') {
+                    initTestamentToggles();
+                }
                 // 渲染完成后滚动到顶部
                 window.scrollTo(0, 0);
                 // 触发路由变化事件
