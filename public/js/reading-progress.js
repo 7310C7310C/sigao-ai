@@ -198,8 +198,9 @@
             saveReadingProgress();
         }, 500); // 等待页面渲染完成
         
+        // 滚动时立即保存（使用节流避免过于频繁）
         var scrollTimeout;
-        var saveDelay = 1000; // 1秒后保存
+        var saveDelay = 200; // 200ms 节流，避免滚动时过于频繁调用
         
         window.addEventListener('scroll', function() {
             if (scrollTimeout) {
