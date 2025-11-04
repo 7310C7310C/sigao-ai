@@ -21,13 +21,6 @@ class ImportService {
     const sheet = workbook.Sheets[sheetName];
     const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
 
-    // 过滤掉表头行（第一行可能是：约别 经卷类别 卷名 章 节 经文内容）
-    const dataRows = rows.filter(function(r) {
-      var bookName = r['卷名'] || r['卷名'] || r['书卷'] || '';
-      // 跳过表头行（卷名 = "卷名"）和空行
-      return bookName && bookName !== '卷名' && bookName !== '书卷';
-    });
-
     const conn = await getConnection();
     
     try {
@@ -47,17 +40,17 @@ class ImportService {
       Logger.info(`创建译本成功，ID: ${translationId}`);
 
       // 第一遍：处理经卷
-      const bookMap = await this.processBooks(conn, dataRows);
+      const bookMap = await this.processBooks(conn, rows);
       Logger.info(`处理了 ${bookMap.size} 本经卷`);
 
       // 第二遍：处理经文
-      const verseCount = await this.processVerses(conn, dataRows, translationId, bookMap);
+      const verseCount = await this.processVerses(conn, rows, translationId, bookMap);
       Logger.info(`导入了 ${verseCount} 条经文`);
 
       await conn.commit();
       Logger.info('数据导入完成');
       
-      return { success: true, rowCount: dataRows.length, verseCount };
+      return { success: true, rowCount: rows.length, verseCount };
     } catch (error) {
       await conn.rollback();
       Logger.error('导入失败:', error);
