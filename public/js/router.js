@@ -166,7 +166,7 @@
         }
         
         var html = '<div class="container">';
-        html += '<h1>📖 思高圣经</h1>';
+        html += '<h1>📖 思高 AI</h1>';
         
         // 添加搜索框
         html += '<div class="search-container">';
