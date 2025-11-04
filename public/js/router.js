@@ -1501,10 +1501,16 @@
                     // 解析主要内容
                     html = marked.parse(content);
                     
-                    // 处理引用上标 [^1] -> <sup><a>
-                    html = html.replace(/\[\^(\d+)\]/g, function(match, num) {
-                        return '<sup class="ref-link"><a href="#ref-' + num + '" id="refback-' + num + '">[' + num + ']</a></sup>';
-                    });
+                    // 只有在有 citations 时才处理引用上标 [^1] -> <sup><a>
+                    // 否则移除所有引用符号，避免显示无效的 [^1] [^2] 等
+                    if (citations && citations.length > 0) {
+                        html = html.replace(/\[\^(\d+)\]/g, function(match, num) {
+                            return '<sup class="ref-link"><a href="#ref-' + num + '" id="refback-' + num + '">[' + num + ']</a></sup>';
+                        });
+                    } else {
+                        // 移除所有引用符号
+                        html = html.replace(/\[\^\d+\]/g, '');
+                    }
                     
                     // 如果有 citations 数组，生成引用列表
                     if (citations && citations.length > 0) {
@@ -1534,12 +1540,12 @@
                             html += '<li id="ref-' + refNum + '">' + refText + '</li>';
                         }
                         html += '</ol></div>';
-                        
-                        // 添加重新生成按钮
-                        html += '<div class="ai-regenerate-container">';
-                        html += '<button class="ai-regenerate-btn" onclick="regenerateAIContent()">重新生成新回答</button>';
-                        html += '</div>';
                     }
+                    
+                    // 无论是否有 citations，都显示“重新生成”按钮
+                    html += '<div class="ai-regenerate-container">';
+                    html += '<button class="ai-regenerate-btn" onclick="regenerateAIContent()">重新生成新回答</button>';
+                    html += '</div>';
                     
                     return html;
                 } catch (e) {

@@ -60,9 +60,11 @@ class AIResponse {
    * @param {object} responseData - 响应数据 { content, citations, related_questions }
    * @param {string} inputText - 输入文本（用于生成哈希）
    * @param {number} ttlDays - 缓存有效期（天数，默认 30 天）
+   * @param {object} apiRequest - API 原始请求数据（可选）
+   * @param {object} apiResponse - API 原始响应数据（可选）
    * @returns {Promise<number>} - 插入的 ID
    */
-  static async saveCache(bookId, chapter, functionType, lang, responseData, inputText, ttlDays) {
+  static async saveCache(bookId, chapter, functionType, lang, responseData, inputText, ttlDays, apiRequest, apiResponse) {
     // 生成输入哈希（用于去重和版本控制）
     var inputHash = crypto.createHash('sha256').update(inputText || '').digest('hex');
     
@@ -73,8 +75,8 @@ class AIResponse {
     if (ttlDays && ttlDays > 0) {
       sql = `
         INSERT INTO ai_responses_cache 
-          (book_id, chapter, function_type, lang, input_hash, response_json, ttl_expires_at)
-        VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY))
+          (book_id, chapter, function_type, lang, input_hash, response_json, api_request_json, api_response_json, ttl_expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY))
       `;
       params = [
         bookId,
@@ -83,13 +85,15 @@ class AIResponse {
         lang || 'zh',
         inputHash,
         JSON.stringify(responseData),
+        apiRequest ? JSON.stringify(apiRequest) : null,
+        apiResponse ? JSON.stringify(apiResponse) : null,
         ttlDays
       ];
     } else {
       sql = `
         INSERT INTO ai_responses_cache 
-          (book_id, chapter, function_type, lang, input_hash, response_json, ttl_expires_at)
-        VALUES (?, ?, ?, ?, ?, ?, NULL)
+          (book_id, chapter, function_type, lang, input_hash, response_json, api_request_json, api_response_json, ttl_expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)
       `;
       params = [
         bookId,
@@ -97,7 +101,9 @@ class AIResponse {
         functionType,
         lang || 'zh',
         inputHash,
-        JSON.stringify(responseData)
+        JSON.stringify(responseData),
+        apiRequest ? JSON.stringify(apiRequest) : null,
+        apiResponse ? JSON.stringify(apiResponse) : null
       ];
     }
     
@@ -265,6 +271,63 @@ class AIResponse {
     }
     
     return { total: 0, summary: 0, history: 0, saints: 0, prayer: 0 };
+  }
+
+  /**
+   * 获取 API 原始数据（用于调试）
+   * @param {number} id - 记录 ID
+   * @returns {Promise<object|null>} - { request, response } 或 null
+   */
+  static async getApiRawData(id) {
+    var sql = `
+      SELECT 
+        api_request_json,
+        api_response_json,
+        book_id,
+        chapter,
+        function_type,
+        created_at
+      FROM ai_responses_cache
+      WHERE id = ?
+    `;
+    
+    var rows = await query(sql, [id]);
+    
+    if (rows && rows.length > 0) {
+      var row = rows[0];
+      
+      var requestJson = row.api_request_json;
+      var responseJson = row.api_response_json;
+      
+      // 解析 JSON
+      if (typeof requestJson === 'string') {
+        try {
+          requestJson = JSON.parse(requestJson);
+        } catch (e) {
+          requestJson = null;
+        }
+      }
+      
+      if (typeof responseJson === 'string') {
+        try {
+          responseJson = JSON.parse(responseJson);
+        } catch (e) {
+          responseJson = null;
+        }
+      }
+      
+      return {
+        id: id,
+        book_id: row.book_id,
+        chapter: row.chapter,
+        function_type: row.function_type,
+        created_at: row.created_at,
+        request: requestJson,
+        response: responseJson
+      };
+    }
+    
+    return null;
   }
 }
 

@@ -25,6 +25,7 @@ router.post('/prompts/toggle/:id', AdminController.togglePrompt);
 
 // AI 结果管理
 router.get('/ai-results', AdminController.showAIResultsPage);
+router.get('/ai-results/api-raw/:id', AdminController.viewApiRawData);
 router.post('/ai-results/delete/:id', AdminController.deleteAIResult);
 router.post('/ai-results/clear-all', AdminController.clearAllAIResults);
 

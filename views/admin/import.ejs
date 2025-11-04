@@ -14,12 +14,6 @@
     <div class="container">
         <h1>📤 圣经导入</h1>
         
-        <% if (message) { %>
-            <div class="message <%= message.indexOf('错误') >= 0 || message.indexOf('Error') >= 0 ? 'error' : 'success' %>">
-                <%= message %>
-            </div>
-        <% } %>
-        
         <h2>导入 Excel 数据</h2>
         
         <form method="post" action="/admin/import/upload" enctype="multipart/form-data">
@@ -40,6 +34,7 @@
             <a href="/">返回首页</a>
         </div>
     </div>
+    <script src="/js/toast.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>

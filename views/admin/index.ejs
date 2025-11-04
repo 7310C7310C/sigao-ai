@@ -70,12 +70,6 @@
     <div class="container">
         <h1>⚙️ 管理后台</h1>
         
-        <% if (message) { %>
-            <div class="message <%= message.indexOf('错误') >= 0 || message.indexOf('Error') >= 0 ? 'error' : 'success' %>">
-                <%= message %>
-            </div>
-        <% } %>
-        
         <div class="admin-features">
             <a href="/admin/prompts" class="admin-feature-card">
                 <div class="admin-feature-icon">💬</div>
@@ -100,6 +94,7 @@
             <a href="/">返回首页</a>
         </div>
     </div>
+    <script src="/js/toast.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>

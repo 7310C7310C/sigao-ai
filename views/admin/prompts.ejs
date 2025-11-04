@@ -207,21 +207,7 @@
     <div class="container">
         <h1>🤖 AI 提示词管理</h1>
         
-        <% if (message) { %>
-            <div class="message <%= message.indexOf('错误') >= 0 || message.indexOf('Error') >= 0 ? 'error' : 'success' %>">
-                <%= message %>
-            </div>
-        <% } %>
-        
-        <!-- 功能导航 -->
-        <div class="admin-nav-grid">
-            <a href="/admin/prompts" class="admin-nav-btn active">
-                <span class="admin-nav-label">提示词管理</span>
-            </a>
-            <a href="/admin" class="admin-nav-btn">
-                <span class="admin-nav-label">圣经导入</span>
-            </a>
-        </div>
+        <!-- 功能导航（已移除多余项） -->
         
         <!-- System Prompts -->
         <div class="prompts-section">
@@ -300,6 +286,7 @@
             <a href="/">返回网站首页</a>
         </div>
     </div>
+    <script src="/js/toast.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>

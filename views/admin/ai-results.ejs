@@ -57,7 +57,7 @@
         .results-table tr:hover {
             background: #f8f9fa;
         }
-        .view-btn, .delete-btn {
+        .view-btn, .api-btn, .delete-btn {
             padding: 0.35rem 0.75rem;
             border: none;
             border-radius: 4px;
@@ -72,6 +72,13 @@
         }
         .view-btn:hover {
             background: #2980b9;
+        }
+        .api-btn {
+            background: #9b59b6;
+            color: white;
+        }
+        .api-btn:hover {
+            background: #8e44ad;
         }
         .delete-btn {
             background: #e74c3c;
@@ -198,12 +205,6 @@
     <div class="container">
         <h1>🤖 AI 结果管理</h1>
         
-        <% if (message) { %>
-            <div class="message <%= message.indexOf('错误') >= 0 || message.indexOf('Error') >= 0 ? 'error' : 'success' %>">
-                <%= message %>
-            </div>
-        <% } %>
-        
         <!-- 统计信息 -->
         <div class="stats">
             <div class="stat-card">
@@ -277,6 +278,7 @@
                             <td><%= typeof result.created_at === 'string' ? result.created_at : new Date(result.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) %></td>
                             <td>
                                 <button class="view-btn" onclick="viewContent(<%= result.id %>)">查看</button>
+                                <button class="api-btn" onclick="viewApiRaw(<%= result.id %>)">API</button>
                                 <button class="delete-btn" onclick="confirmDelete(<%= result.id %>, '<%= result.book_name %>', <%= result.chapter %>, '<%= result.function_type %>')">删除</button>
                             </td>
                         </tr>
@@ -300,6 +302,7 @@
         </div>
     </div>
     
+    <script src="/js/toast.js"></script>
     <script src="/js/main.js"></script>
     <script>
         var allResults = <%- JSON.stringify(results) %>;
@@ -357,6 +360,11 @@
                 document.body.appendChild(form);
                 form.submit();
             }
+        }
+        
+        function viewApiRaw(id) {
+            // 在新标签页中打开 API 原始数据
+            window.open('/admin/ai-results/api-raw/' + id, '_blank');
         }
         
         function confirmClearAll() {

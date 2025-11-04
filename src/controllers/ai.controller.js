@@ -168,7 +168,11 @@ var AIController = {
                             related_questions: aiResult.related_questions
                         };
                         
-                        // 4. 保存到数据库缓存
+                        // 提取原始 API 数据（如果存在）
+                        var apiRequest = aiResult._apiRequest || null;
+                        var apiResponse = aiResult._apiResponse || null;
+                        
+                        // 4. 保存到数据库缓存（包含原始 API 数据）
                         return AIResponse.saveCache(
                             bookId,
                             chapter,
@@ -176,7 +180,9 @@ var AIController = {
                             lang,
                             responseData,
                             versesText,
-                            30 // 缓存 30 天
+                            30, // 缓存 30 天
+                            apiRequest,
+                            apiResponse
                         ).then(function() {
                             return responseData;
                         }).catch(function(cacheErr) {
@@ -464,7 +470,7 @@ var AIController = {
                                 }) + '\n\n');
                             },
                             // onComplete - 生成完成
-                            function(citations, relatedQuestions) {
+                            function(citations, relatedQuestions, apiRequest, apiResponseChunks) {
                                 // 清除心跳
                                 if (heartbeatTimer) {
                                     clearInterval(heartbeatTimer);
@@ -477,7 +483,19 @@ var AIController = {
                                     related_questions: relatedQuestions
                                 };
                                 
-                                // 保存到数据库缓存
+                                // 构建 API 响应对象（从流式数据块重建）
+                                var apiResponse = null;
+                                if (apiResponseChunks && apiResponseChunks.length > 0) {
+                                    apiResponse = {
+                                        model: 'magisterium-1',
+                                        stream: true,
+                                        chunks: apiResponseChunks,
+                                        citations: citations,
+                                        related_questions: relatedQuestions
+                                    };
+                                }
+                                
+                                // 保存到数据库缓存（包含原始 API 数据）
                                 AIResponse.saveCache(
                                     bookId,
                                     chapter,
@@ -485,7 +503,9 @@ var AIController = {
                                     lang,
                                     responseData,
                                     versesText,
-                                    30
+                                    30,
+                                    apiRequest,
+                                    apiResponse
                                 ).then(function() {
                                     Logger.info('流式响应已缓存', {
                                         functionType: functionType,
