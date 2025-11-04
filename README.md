@@ -29,10 +29,24 @@ cd sigao-ai
 ```
 
 2. **配置环境变量**
+
+**方式一：使用配置向导（推荐）**
+```bash
+bash scripts/setup-env.sh
+```
+
+**方式二：手动配置**
 ```bash
 cp .env.example .env
-# 编辑 .env 文件，修改数据库密码等配置
+nano .env  # 编辑配置文件
 ```
+
+**⚠️ 重要：生产环境必须修改以下配置**
+- `ADMIN_PASS`: 管理员密码（默认：admin）
+- `DB_PASS`: 数据库密码
+- `MAGISTERIUM_API_KEY`: AI 服务 API 密钥
+
+详细配置说明请查看：[环境配置文档](docs/CONFIGURATION.md)
 
 3. **启动服务**
 ```bash
@@ -41,11 +55,14 @@ docker-compose up -d
 
 4. **访问应用**
 - 主页: http://localhost:3000
-- 管理后台: http://localhost:3000/admin (默认密码：admin)
+- 管理后台: http://localhost:3000/admin
+  - 用户名：见 `.env` 中的 `ADMIN_USERNAME`（默认：admin）
+  - 密码：见 `.env` 中的 `ADMIN_PASS`（默认：admin，**生产环境必须修改！**）
 
 ## 📚 文档
 
 ### 用户文档
+- [环境配置](docs/CONFIGURATION.md) - 环境变量详细说明
 - [API 文档](docs/api.md) - 接口说明和使用方法
 - [部署文档](docs/deployment.md) - 生产环境部署指南
 - [数据库文档](docs/database.md) - 数据库结构设计
