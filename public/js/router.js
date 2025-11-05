@@ -189,7 +189,7 @@
         }
         
     var html = '<div class="container">';
-    html += renderHeader('📖 思高 AI');
+    html += renderHeader('📖 思高小助手');
         
         // 添加搜索框
         html += '<div class="search-container">';
