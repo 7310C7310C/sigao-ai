@@ -184,7 +184,21 @@
 </head>
 <body>
     <div class="container">
-        <h1>✏️ 编辑提示词</h1>
+        <div class="page-header">
+            <h1>✏️ 编辑提示词</h1>
+            <div class="font-size-selector">
+                <button class="font-size-button" id="settings-toggle" aria-label="设置">⚙️</button>
+                <div class="font-size-options" id="settings-options">
+                    <div class="settings-header">字号</div>
+                    <button data-action="font-size" data-size="14">小</button>
+                    <button data-action="font-size" data-size="18" class="active">默认</button>
+                    <button data-action="font-size" data-size="22">大</button>
+                    <div class="settings-header">显示模式</div>
+                    <button data-action="theme" data-theme="light" class="active">日间模式</button>
+                    <button data-action="theme" data-theme="dark">夜间模式</button>
+                </div>
+            </div>
+        </div>
         
         <div class="form-container">
             <h2>
@@ -262,6 +276,7 @@
             <a href="/admin">返回管理首页</a>
         </div>
     </div>
+    <script src="/js/font-size-control.js"></script>
     <script src="/js/main.js"></script>
 </body>
 </html>

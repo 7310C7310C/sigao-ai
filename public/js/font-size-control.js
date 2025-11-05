@@ -120,6 +120,10 @@
         if (!toggleBtn || !optionsPanel) {
             return;
         }
+        // 避免重复绑定
+        if (toggleBtn.getAttribute('data-initialized') === '1') {
+            return;
+        }
         
         // 读取保存的设置并应用
         var savedSize = getSavedFontSize();
@@ -137,6 +141,7 @@
                 optionsPanel.className = 'font-size-options active';
             }
         });
+        toggleBtn.setAttribute('data-initialized', '1');
         
         // 点击选项
         var buttons = optionsPanel.querySelectorAll('button');
@@ -167,5 +172,9 @@
     } else {
         initSettingsControl();
     }
+    // 监听前端路由切换后重新初始化（SPA）
+    document.addEventListener('routeChanged', function() {
+        try { initSettingsControl(); } catch (e) {}
+    });
     
 })();

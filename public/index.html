@@ -20,19 +20,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@11.0.0/marked.min.js"></script>
 </head>
 <body>
-    <!-- 设置面板（固定位置，不会被路由清除） -->
-    <div class="font-size-selector">
-        <button class="font-size-button" id="settings-toggle" aria-label="设置">⚙️</button>
-        <div class="font-size-options" id="settings-options">
-            <div class="settings-header">字号</div>
-            <button data-action="font-size" data-size="14">小</button>
-            <button data-action="font-size" data-size="18" class="active">默认</button>
-            <button data-action="font-size" data-size="22">大</button>
-            <div class="settings-header">显示模式</div>
-            <button data-action="theme" data-theme="light" class="active">日间模式</button>
-            <button data-action="theme" data-theme="dark">夜间模式</button>
-        </div>
-    </div>
+    <!-- 设置面板将随各页面头部呈现 -->
     
     <!-- 加载动画 -->
     <div class="loading-spinner" id="loading">
@@ -47,7 +35,21 @@
     <!-- 主内容容器 -->
     <div id="app-container">
         <div class="container">
-            <h1>📖 思高 AI</h1>
+            <div class="page-header">
+                <h1>📖 思高 AI</h1>
+                <div class="font-size-selector">
+                    <button class="font-size-button" id="settings-toggle" aria-label="设置">⚙️</button>
+                    <div class="font-size-options" id="settings-options">
+                        <div class="settings-header">字号</div>
+                        <button data-action="font-size" data-size="14">小</button>
+                        <button data-action="font-size" data-size="18" class="active">默认</button>
+                        <button data-action="font-size" data-size="22">大</button>
+                        <div class="settings-header">显示模式</div>
+                        <button data-action="theme" data-theme="light" class="active">日间模式</button>
+                        <button data-action="theme" data-theme="dark">夜间模式</button>
+                    </div>
+                </div>
+            </div>
             <p>正在加载...</p>
         </div>
     </div>

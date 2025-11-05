@@ -14,6 +14,29 @@
         scrollToVerse: null, // 用于保存需要滚动到的经文引用
         allBooks: [] // 存储所有书卷列表，用于实时搜索提示
     };
+
+    /**
+     * 渲染页面头部：左侧标题 + 右侧设置按钮（蓝线在下方）
+     */
+    function renderHeader(title) {
+        var html = '';
+        html += '<div class="page-header">';
+        html += '<h1>' + title + '</h1>';
+        html += '<div class="font-size-selector">';
+        html += '  <button class="font-size-button" id="settings-toggle" aria-label="设置">⚙️</button>';
+        html += '  <div class="font-size-options" id="settings-options">';
+        html += '    <div class="settings-header">字号</div>';
+        html += '    <button data-action="font-size" data-size="14">小</button>';
+        html += '    <button data-action="font-size" data-size="18" class="active">默认</button>';
+        html += '    <button data-action="font-size" data-size="22">大</button>';
+        html += '    <div class="settings-header">显示模式</div>';
+        html += '    <button data-action="theme" data-theme="light" class="active">日间模式</button>';
+        html += '    <button data-action="theme" data-theme="dark">夜间模式</button>';
+        html += '  </div>';
+        html += '</div>';
+        html += '</div>';
+        return html;
+    }
     
     /**
      * 显示/隐藏加载动画
@@ -165,8 +188,8 @@
             testaments[testament][bookType].push(book);
         }
         
-        var html = '<div class="container">';
-        html += '<h1>📖 思高 AI</h1>';
+    var html = '<div class="container">';
+    html += renderHeader('📖 思高 AI');
         
         // 添加搜索框
         html += '<div class="search-container">';
@@ -343,8 +366,8 @@
         
         var bookName = chapters[0].book_name || '书卷';
         
-        var html = '<div class="container">';
-        html += '<h1>' + bookName + '</h1>';
+    var html = '<div class="container">';
+    html += renderHeader(bookName);
         
         // 面包屑导航
         html += '<div class="breadcrumb">';
@@ -383,8 +406,8 @@
         
         var bookName = verses[0].book_name || '书卷';
         
-        var html = '<div class="container verse-page-container">';
-        html += '<h1>' + bookName + ' 第 ' + chapter + ' 章</h1>';
+    var html = '<div class="container verse-page-container">';
+    html += renderHeader(bookName + ' 第 ' + chapter + ' 章');
         
         // 面包屑导航
         html += '<div class="breadcrumb">';
@@ -487,8 +510,8 @@
      * 渲染搜索结果
      */
     function renderSearchResults(results, keyword) {
-        var html = '<div class="container">';
-        html += '<h1>🔍 搜索结果</h1>';
+    var html = '<div class="container">';
+    html += renderHeader('🔍 搜索结果');
         
         // 面包屑导航
         html += '<div class="breadcrumb">';
@@ -636,7 +659,7 @@
             if (container) {
                 container.innerHTML = 
                     '<div class="container">' +
-                    '<h1>⚠️ 页面不存在</h1>' +
+                    renderHeader('⚠️ 页面不存在') +
                     '<p>您访问的地址 <code>' + serverPath + '</code> 不存在</p>' +
                     '<p>本站使用 Hash 路由，正确的 URL 格式应为：</p>' +
                     '<ul style="text-align: left; max-width: 400px; margin: 20px auto;">' +
@@ -835,7 +858,7 @@
         // 404
         else {
             toggleLoading(false);
-            container.innerHTML = '<div class="container"><h1>404</h1><p>页面不存在</p><a href="#/">返回首页</a></div>';
+            container.innerHTML = '<div class="container">' + renderHeader('404') + '<p>页面不存在</p><a href="#/">返回首页</a></div>';
             window.scrollTo(0, 0);
         }
     }

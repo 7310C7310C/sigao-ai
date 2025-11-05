@@ -51,6 +51,31 @@ h1 {
     font-weight: 600;
 }
 
+/* 页面头部：左侧标题 + 右侧设置按钮，蓝线在二者之下 */
+.page-header {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+    -webkit-justify-content: space-between;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #3498db;
+}
+
+.page-header h1 {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
 h2 {
     color: #34495e;
     font-size: 1.5rem;
@@ -2281,16 +2306,17 @@ body.dark-mode .ai-error {
 }
 
 /* 字号和设置选择器 */
+/* 设置按钮容器（放在 page-header 右侧） */
 .font-size-selector {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
+    position: relative;
+    top: auto;
+    right: auto;
     z-index: 100;
 }
 
 .font-size-button {
-    padding: 8px 12px;
-    font-size: 16px;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     background-color: white;
@@ -2299,8 +2325,8 @@ body.dark-mode .ai-error {
     transition: all 0.2s ease;
     color: #333;
     line-height: 1;
-    min-width: 45px;
-    height: 36px;
+    min-width: 44px; /* 触摸目标要求 */
+    min-height: 44px; /* 触摸目标要求 */
 }
 
 .font-size-button:hover {
@@ -2410,14 +2436,23 @@ body.dark-mode .settings-header {
 
 /* 移动端设置面板 */
 @media screen and (max-width: 480px) {
-    .font-size-selector {
-        top: 0.5rem;
-        right: 0.5rem;
+    .page-header {
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-align: stretch;
+        -webkit-align-items: stretch;
+        -ms-flex-align: stretch;
+        align-items: stretch;
+        gap: 0.5rem;
     }
-    
+
     .font-size-button {
-        font-size: 0.85rem;
-        padding: 0.4rem 0.8rem;
+        font-size: 0.95rem;
+        padding: 0.5rem 0.75rem;
+        width: 100%;
     }
 }
 
