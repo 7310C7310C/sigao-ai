@@ -36,7 +36,7 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
-    padding-bottom: 90px; /* 为固定底部 AI 栏留出空间 */
+    padding-bottom: 90px; /* 为固定底部智能栏留出空间 */
     background-color: #fff;
     min-height: 100vh;
 }
@@ -915,7 +915,7 @@ body.dark-mode .recent-reading-item-time {
     color: #000;
 }
 
-/* 经文页面容器 - 添加底部 padding 避免被 AI 按钮遮挡 */
+/* 经文页面容器 - 添加底部 padding 避免被智能按钮遮挡 */
 .verse-page-container {
     padding-bottom: 150px !important;
 }
@@ -1522,7 +1522,7 @@ body.dark-mode .search-suggestion-item .suggestion-type {
     color: #a0a0a0;
 }
 
-/* AI 按钮夜间模式 */
+/*智能按钮夜间模式 */
 body.dark-mode .ai-features-fixed {
     background: #1a1a1a;
     border-top-color: #444;
@@ -1547,7 +1547,7 @@ body.dark-mode .ai-btn:disabled {
     color: #666;
 }
 
-/* AI 结果区夜间模式 */
+/*智能结果区夜间模式 */
 body.dark-mode .ai-result {
     background: rgba(26, 26, 26, 0.98);
 }
@@ -1572,9 +1572,9 @@ body.dark-mode .ai-close-btn:hover {
 }
 
 /* ==========================================
-   AI 功能区域样式
+  智能功能区域样式
    ========================================== */
-/* AI 功能区 - 固定在页面底部 */
+/*智能功能区 - 固定在页面底部 */
 .ai-features-fixed {
     position: fixed;
     bottom: 0;
@@ -1587,7 +1587,7 @@ body.dark-mode .ai-close-btn:hover {
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* AI 按钮行 - 单行四个按钮，始终显示 */
+/*智能按钮行 - 单行四个按钮，始终显示 */
 .ai-buttons {
     display: -webkit-box;
     display: -webkit-flex;
@@ -1641,7 +1641,7 @@ body.dark-mode .ai-close-btn:hover {
     transform: none;
 }
 
-/* AI 结果显示区 - 全屏显示 */
+/*智能结果显示区 - 全屏显示 */
 .ai-result {
     position: fixed;
     top: 0;
@@ -1722,7 +1722,7 @@ body.dark-mode .ai-close-btn:hover {
     transform: scale(0.95);
 }
 
-/* AI 结果内容 - Markdown 样式 */
+/*智能结果内容 - Markdown 样式 */
 .ai-result-content {
     color: #000;
     line-height: 1.5;

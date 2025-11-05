@@ -1,5 +1,5 @@
 /**
- * 思高圣经前端脚本
+ * 前端脚本
  * 兼容旧版浏览器：iOS 10+, Android 5.0+
  */
 
@@ -96,12 +96,12 @@
         
         // 显示/隐藏按钮
         function toggleButton() {
-            // 检查 AI 结果区是否打开
+            // 检查结果区是否打开
             var aiResult = document.getElementById('ai-result');
             var isAIOpen = aiResult && aiResult.style.display !== 'none';
             
             if (isAIOpen) {
-                // AI 结果区打开时，监听 AI 区的滚动
+                //结果区打开时，监听结果区的滚动
                 var aiScrollTop = aiResult.scrollTop;
                 if (aiScrollTop > 300) {
                     button.style.opacity = '1';
@@ -111,7 +111,7 @@
                     button.style.visibility = 'hidden';
                 }
             } else {
-                // AI 结果区关闭时，监听页面滚动
+                //结果区关闭时，监听页面滚动
                 var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 if (scrollTop > 300) {
                     button.style.opacity = '1';
@@ -132,7 +132,7 @@
             scrollTimeout = setTimeout(toggleButton, 100);
         });
         
-        // 监听 AI 结果区的滚动（通过事件委托）
+        // 监听结果区的滚动（通过事件委托）
         document.addEventListener('scroll', function(e) {
             if (e.target.id === 'ai-result') {
                 if (scrollTimeout) {
@@ -144,15 +144,15 @@
         
         // 点击返回顶部
         button.addEventListener('click', function() {
-            // 检查 AI 结果区是否打开
+            // 检查结果区是否打开
             var aiResult = document.getElementById('ai-result');
             var isAIOpen = aiResult && aiResult.style.display !== 'none';
             
             if (isAIOpen) {
-                // AI 结果区打开时，滚动 AI 区
+                //结果区打开时，滚动结果区
                 smoothScrollToTopElement(aiResult);
             } else {
-                // AI 结果区关闭时，滚动页面
+                //结果区关闭时，滚动页面
                 smoothScrollToTop();
             }
         });

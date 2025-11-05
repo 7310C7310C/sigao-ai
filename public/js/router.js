@@ -1,5 +1,5 @@
 /**
- * 思高圣经前端路由系统
+ * 前端路由系统
  * Hash 路由实现，ES5 语法兼容旧浏览器
  */
 
@@ -456,7 +456,7 @@
         
         html += '</div>';
         
-        // AI 辅助功能区（固定在底部）
+        //智能辅助功能区（固定在底部）
         html += '<div class="ai-features-fixed">';
         html += '<div id="ai-result" class="ai-result" style="display: none;">';
         html += '<button id="ai-result-close" class="ai-close-btn">✕</button>';
@@ -820,7 +820,7 @@
                         container.innerHTML = renderVerses(versesData, bookId, parseInt(chapter), navData);
                         window.scrollTo(0, 0);
                         
-                        // 绑定 AI 按钮事件
+                        // 绑定智能按钮事件
                         initAIButtons();
                         
                         // 检查是否需要滚动到特定经文（从搜索结果跳转过来）
@@ -1138,7 +1138,7 @@
         document.addEventListener('keydown', function(e) {
             var hash = window.location.hash;
             
-            // ESC 键关闭 AI 内容区
+            // ESC 键关闭智能内容区
             if (e.keyCode === 27 || e.key === 'Escape') {
                 var aiResult = document.getElementById('ai-result');
                 if (aiResult && aiResult.style.display !== 'none') {
@@ -1182,7 +1182,7 @@
     }
     
     /**
-     * 初始化 AI 按钮事件
+     * 初始化智能按钮事件
      */
     function initAIButtons() {
         var aiButtons = document.querySelectorAll('.ai-btn');
@@ -1205,7 +1205,7 @@
         // 当前激活的按钮
         var activeButton = null;
         
-        // 当前显示的 AI 内容信息
+        // 当前显示的智能内容信息
         var currentAIInfo = {
             functionType: null,
             bookId: null,
@@ -1215,7 +1215,7 @@
         // 内容缓存（内存缓存，刷新页面会丢失）
         var contentCache = {};
         
-        // 重新生成 AI 内容（全局函数，供按钮调用）
+        // 重新生成智能内容（全局函数，供按钮调用）
         window.regenerateAIContent = function() {
             if (!currentAIInfo.functionType || !currentAIInfo.bookId || !currentAIInfo.chapter) {
                 showError('无法重新生成：缺少必要信息');
@@ -1262,7 +1262,7 @@
                     this.classList.remove('active');
                     activeButton = null;
                 } else {
-                    // 否则请求 AI 生成（或从缓存读取）
+                    // 否则请求智能生成（或从缓存读取）
                     // 移除其他按钮的激活状态
                     for (var j = 0; j < aiButtons.length; j++) {
                         aiButtons[j].classList.remove('active');
@@ -1284,7 +1284,7 @@
                         // 从缓存读取（秒开）
                         showCachedContent(functionType, contentCache[cacheKey]);
                     } else {
-                        // 请求 AI 生成
+                        // 请求智能生成
                         requestAI(functionType, bookId, chapter, cacheKey, false);
                     }
                 }
@@ -1412,7 +1412,7 @@
                         
                     } else if (data.type === 'error') {
                         // 错误处理
-                        showError(data.message || 'AI 生成失败');
+                        showError(data.message || '生成失败');
                         eventSource.close();
                     }
                 } catch (e) {
@@ -1494,7 +1494,7 @@
                     var targetEl = document.getElementById(targetId);
                     
                     if (targetEl) {
-                        // 在 AI 结果区内平滑滚动
+                        // 在智能结果区内平滑滚动
                         targetEl.scrollIntoView({ 
                             behavior: 'smooth', 
                             block: 'start' 
