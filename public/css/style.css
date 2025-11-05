@@ -459,6 +459,22 @@ form {
     text-align: center;
 }
 
+/* 禁用态：显示无、不可点击 */
+.continue-reading-card.is-disabled,
+.recent-reading-card.is-disabled {
+    opacity: 0.6;
+    cursor: default;
+    pointer-events: none;
+}
+
+.continue-reading-card.is-disabled:hover,
+.recent-reading-card.is-disabled:hover {
+    -webkit-transform: none;
+    transform: none;
+    -webkit-box-shadow: 0 4px 15px rgba(95, 114, 228, 0.3);
+    box-shadow: 0 4px 15px rgba(95, 114, 228, 0.3);
+}
+
 /* 最近阅读卡片使用不同颜色 */
 .recent-reading-card {
     background: -webkit-linear-gradient(135deg, #667eea 0%, #764ba2 100%);

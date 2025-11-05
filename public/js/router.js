@@ -39,6 +39,68 @@
     }
     
     /**
+     * 渲染继续/最近阅读卡片（同步，避免闪烁）
+     */
+    function renderReadingCards() {
+        var progress = null;
+        var history = [];
+        
+        try {
+            var progressData = localStorage.getItem('sigao_reading_progress');
+            if (progressData) {
+                progress = JSON.parse(progressData);
+            }
+            var historyData = localStorage.getItem('sigao_reading_history');
+            if (historyData) {
+                history = JSON.parse(historyData);
+            }
+        } catch (e) {
+            // localStorage 不可用时使用空数据
+        }
+        
+        var html = '<div class="reading-cards-container">';
+        
+        // 继续阅读卡片
+        var hasValidProgress = false;
+        var continueText = '无';
+        var continuePath = '';
+        
+        if (progress && progress.timestamp) {
+            var now = new Date().getTime();
+            var daysPassed = (now - progress.timestamp) / (1000 * 60 * 60 * 24);
+            if (daysPassed <= 30 && progress.bookName && progress.chapter) {
+                hasValidProgress = true;
+                continueText = (progress.bookName || '未知书卷') + ' 第 ' + progress.chapter + ' 章';
+                continuePath = progress.path || '';
+            }
+        }
+        
+        html += '<div class="continue-reading-card' + (hasValidProgress ? '' : ' is-disabled') + '"';
+        if (hasValidProgress) {
+            html += ' data-path="' + continuePath + '"';
+        }
+        html += '>';
+        html += '<div class="continue-reading-content">';
+        html += '<h3 class="continue-reading-title">📖 继续阅读</h3>';
+        html += '<p class="continue-reading-info">' + continueText + '</p>';
+        html += '</div></div>';
+        
+        // 最近阅读卡片
+        var count = history && history.length ? history.length : 0;
+        var recentText = count > 0 ? (count + ' 条记录') : '无';
+        
+        html += '<div class="recent-reading-card' + (count > 0 ? '' : ' is-disabled') + '">';
+        html += '<div class="recent-reading-content">';
+        html += '<h3 class="recent-reading-title">📚 最近阅读</h3>';
+        html += '<p class="recent-reading-info">' + recentText + '</p>';
+        html += '</div></div>';
+        
+        html += '</div>';
+        
+        return html;
+    }
+    
+    /**
      * 显示/隐藏加载动画
      */
     function toggleLoading(show) {
@@ -165,6 +227,31 @@
     }
     
     /**
+     * 绑定继续/最近阅读卡片的点击事件
+     * 只为启用的卡片(非 .is-disabled)绑定事件
+     */
+    function bindReadingCardsEvents() {
+        // 绑定继续阅读卡片
+        var continueCard = document.querySelector('.continue-reading-card');
+        if (continueCard && !continueCard.classList.contains('is-disabled')) {
+            continueCard.addEventListener('click', function() {
+                var path = continueCard.getAttribute('data-path');
+                if (path) {
+                    window.location.hash = path;
+                }
+            });
+        }
+        
+        // 绑定最近阅读卡片
+        var recentCard = document.querySelector('.recent-reading-card');
+        if (recentCard && !recentCard.classList.contains('is-disabled')) {
+            recentCard.addEventListener('click', function() {
+                window.location.hash = '#/recent-reading';
+            });
+        }
+    }
+
+    /**
      * 渲染书卷列表（分组显示）
      */
     function renderBookList(books) {
@@ -190,6 +277,9 @@
         
     var html = '<div class="container">';
     html += renderHeader('📖 思高小助手');
+        
+        // 继续/最近阅读卡片（同步渲染，避免闪烁）
+        html += renderReadingCards();
         
         // 添加搜索框
         html += '<div class="search-container">';
@@ -715,6 +805,8 @@
                 container.innerHTML = renderBookList(response.data);
                 // 绑定搜索事件
                 bindSearchEvents();
+                // 绑定继续/最近阅读卡片点击事件
+                bindReadingCardsEvents();
                 // 初始化 新约/旧约 折叠控制
                 if (typeof initTestamentToggles === 'function') {
                     initTestamentToggles();

@@ -272,6 +272,7 @@
     
     /**
      * 在首页显示继续阅读和最近阅读卡片
+     * 注意：卡片HTML已由 router.js 同步渲染，此函数现在只检查是否需要渲染
      */
     function showContinueReading() {
         // 只在首页显示（Hash 路由）
@@ -279,52 +280,62 @@
             return;
         }
         
-        var progress = getReadingProgress();
-        var history = getReadingHistory();
-        
-        // 如果既没有进度也没有历史，不显示
-        if (!progress && history.length === 0) {
+        // 检查卡片是否已经存在（由 router.js 渲染）
+        var existingContainer = document.querySelector('.reading-cards-container');
+        if (existingContainer) {
+            // 已经渲染，跳过
             return;
         }
         
-        // 创建容器
+        var progress = getReadingProgress();
+        var history = getReadingHistory();
+        
+        // 创建容器（无论是否有记录都显示卡片）
         var cardsContainer = document.createElement('div');
         cardsContainer.className = 'reading-cards-container';
         
-        // 继续阅读卡片
-        if (progress) {
-            var now = new Date().getTime();
-            var daysPassed = (now - progress.timestamp) / (1000 * 60 * 60 * 24);
+        // 继续阅读卡片（无记录显示“无”，点击无反应）
+        (function() {
+            var continueCard = document.createElement('div');
+            continueCard.className = 'continue-reading-card';
             
-            // 30天内的才显示
-            if (daysPassed <= 30) {
-                var continueCard = document.createElement('div');
-                continueCard.className = 'continue-reading-card';
-                
-                var displayText = progress.bookName || '未知书卷';
-                displayText += ' 第 ' + progress.chapter + ' 章';
-                
-                continueCard.innerHTML = 
-                    '<div class="continue-reading-content">' +
-                    '<h3 class="continue-reading-title">📖 继续阅读</h3>' +
-                    '<p class="continue-reading-info">' + displayText + '</p>' +
-                    '</div>';
-                
+            var hasValid = false;
+            var displayText = '无';
+            
+            if (progress && progress.timestamp) {
+                var now = new Date().getTime();
+                var daysPassed = (now - progress.timestamp) / (1000 * 60 * 60 * 24);
+                if (daysPassed <= 30 && progress.bookName && progress.chapter) {
+                    hasValid = true;
+                    displayText = (progress.bookName || '未知书卷') + ' 第 ' + progress.chapter + ' 章';
+                }
+            }
+            
+            continueCard.innerHTML = 
+                '<div class="continue-reading-content">' +
+                '<h3 class="continue-reading-title">📖 继续阅读</h3>' +
+                '<p class="continue-reading-info">' + displayText + '</p>' +
+                '</div>';
+            
+            if (hasValid) {
                 continueCard.addEventListener('click', function() {
                     window.location.hash = progress.path;
                 });
-                
-                cardsContainer.appendChild(continueCard);
+            } else {
+                try { continueCard.setAttribute('aria-disabled', 'true'); } catch (e) {}
+                continueCard.className = continueCard.className + ' is-disabled';
             }
-        }
+            
+            cardsContainer.appendChild(continueCard);
+        })();
         
-        // 最近阅读卡片
-        if (history.length > 0) {
+        // 最近阅读卡片（无记录显示“无”，点击无反应）
+        (function() {
             var recentCard = document.createElement('div');
             recentCard.className = 'recent-reading-card';
             
-            var count = history.length;
-            var countText = count + ' 条记录';
+            var count = history && history.length ? history.length : 0;
+            var countText = count > 0 ? (count + ' 条记录') : '无';
             
             recentCard.innerHTML = 
                 '<div class="recent-reading-content">' +
@@ -332,12 +343,17 @@
                 '<p class="recent-reading-info">' + countText + '</p>' +
                 '</div>';
             
-            recentCard.addEventListener('click', function() {
-                window.location.hash = '#/recent-reading';
-            });
+            if (count > 0) {
+                recentCard.addEventListener('click', function() {
+                    window.location.hash = '#/recent-reading';
+                });
+            } else {
+                try { recentCard.setAttribute('aria-disabled', 'true'); } catch (e) {}
+                recentCard.className = recentCard.className + ' is-disabled';
+            }
             
             cardsContainer.appendChild(recentCard);
-        }
+        })();
         
         // 插入到页面中
         var container = document.querySelector('.container');
