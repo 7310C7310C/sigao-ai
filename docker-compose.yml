@@ -8,9 +8,12 @@ services:
       MYSQL_DATABASE: "${DB_NAME}"
       MYSQL_USER: "${DB_USER}"
       MYSQL_PASSWORD: "${DB_PASS}"
+      TZ: Asia/Shanghai
     volumes:
       - db_data:/var/lib/mysql
       - ./sql/migrations:/docker-entrypoint-initdb.d:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
       interval: 10s
@@ -22,6 +25,8 @@ services:
     working_dir: /app
     volumes:
       - ./:/app
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     command: ["sh","-lc","npm install --no-audit --no-fund && node src/index.js"]
     env_file:
       - .env
@@ -39,6 +44,7 @@ services:
       - MAGISTERIUM_API_URL=${MAGISTERIUM_API_URL}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_DIR=${LOG_DIR:-./logs}
+      - TZ=Asia/Shanghai
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     depends_on:

@@ -10,11 +10,17 @@ function getPool() {
   if (!pool) {
     pool = mysql.createPool(dbConfig);
     
-    // 监听连接建立事件，设置时区为中国时区
+    // 监听连接建立事件，设置时区和字符集
     pool.on('connection', function(connection) {
       connection.query("SET time_zone = '+08:00'", function(err) {
         if (err) {
           console.error('[Database] 设置时区失败:', err.message);
+        }
+      });
+      // 显式设置字符集，确保 ENUM 等类型能正确处理中文
+      connection.query("SET NAMES 'utf8mb4'", function(err) {
+        if (err) {
+          console.error('[Database] 设置字符集失败:', err.message);
         }
       });
     });

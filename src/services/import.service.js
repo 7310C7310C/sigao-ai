@@ -79,23 +79,25 @@ class ImportService {
   static async processBooks(conn, rows) {
     const bookMap = new Map();
     
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      const testament = r['约别'] || r['约别'] || '';
-      const bookType = r['经卷类别'] || r['经卷类别'] || '';
-      const bookName = r['卷名'] || r['卷名'] || r['书卷'] || '';
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var testament = (r['约别'] || r['约别'] || '').trim();
+      var bookType = (r['经卷类别'] || r['经卷类别'] || '').trim();
+      var bookName = (r['卷名'] || r['卷名'] || r['书卷'] || '').trim();
 
       if (!bookName) continue;
 
-      let bookCode = bookMap.get(bookName);
+      var bookCode = bookMap.get(bookName);
       if (!bookCode) {
-        bookCode = slugify(bookName) || `book_${bookMap.size + 1}`;
-        const [bres] = await conn.execute(
+        bookCode = slugify(bookName) || 'book_' + (bookMap.size + 1);
+        var finalTestament = testament || '新约';
+        
+        var bres = await conn.execute(
           'INSERT INTO books (code, name_cn, book_type, testament, order_index) VALUES (?, ?, ?, ?, ?)',
-          [bookCode, bookName, bookType || null, testament || '新约', bookMap.size + 1]
+          [bookCode, bookName, bookType || null, finalTestament, bookMap.size + 1]
         );
-        bookMap.set(bookName, bres.insertId);
-        bookMap.set(bookName + '_id', bres.insertId);
+        bookMap.set(bookName, bres[0].insertId);
+        bookMap.set(bookName + '_id', bres[0].insertId);
       }
     }
     
@@ -109,25 +111,27 @@ class ImportService {
     const lastLineIndex = {};
     let verseCount = 0;
 
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      const bookName = r['卷名'] || r['卷名'] || r['书卷'] || '';
-      const chapterRaw = String(r['章'] || '').trim();
-      const verseRaw = String(r['节'] || '').trim();
-      const text = String(r['经文内容'] || r['经文内容'] || '').trim();
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var bookName = (r['卷名'] || r['卷名'] || r['书卷'] || '').trim();
+      var chapterRaw = String(r['章'] || '').trim();
+      var verseRaw = String(r['节'] || '').trim();
+      var text = String(r['经文内容'] || r['经文内容'] || '').trim();
 
       if (!bookName) continue;
 
-      const bookId = bookMap.get(bookName + '_id');
-      let chapter = parseInt(chapterRaw, 10);
+      var bookId = bookMap.get(bookName + '_id');
+      if (!bookId) continue; // 跳过找不到书卷的行
+      
+      var chapter = parseInt(chapterRaw, 10);
       if (!Number.isFinite(chapter)) chapter = 0;
 
-      const verse_ref = verseRaw === '' ? null : verseRaw;
-      const key = `${translationId}_${bookId}_${chapter}`;
+      var verse_ref = verseRaw === '' ? null : verseRaw;
+      var key = translationId + '_' + bookId + '_' + chapter;
       lastLineIndex[key] = (lastLineIndex[key] || 0) + 1;
-      const line_index = lastLineIndex[key];
-      const content_hash = generateContentHash(text);
-      const type = verse_ref ? 'verse' : 'note';
+      var line_index = lastLineIndex[key];
+      var content_hash = generateContentHash(text);
+      var type = verse_ref ? 'verse' : 'note';
 
       await conn.execute(
         'INSERT INTO verses (translation_id, book_id, chapter, verse_ref, line_index, type, text, content_hash, original_row) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
