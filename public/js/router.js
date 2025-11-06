@@ -1226,21 +1226,68 @@
         // 初始加载
         handleRoute();
         
-        // 添加全局键盘事件
-        document.addEventListener('keydown', function(e) {
+        // 监听浏览器返回/前进按钮
+        window.addEventListener('popstate', function() {
             var hash = window.location.hash;
             
-            // ESC 键关闭智能内容区
-            if (e.keyCode === 27 || e.key === 'Escape') {
-                var aiResult = document.getElementById('ai-result');
-                if (aiResult && aiResult.style.display !== 'none') {
-                    aiResult.style.display = 'none';
-                    // 恢复 body 滚动
-                    document.body.style.overflow = '';
-                    document.body.style.position = '';
-                    e.preventDefault();
+            // 如果当前 hash 不包含 ai-open，说明需要关闭 AI 内容区
+            if (hash.indexOf('&ai-open') === -1) {
+                if (typeof window.closeAIPanel === 'function') {
+                    window.closeAIPanel({ skipHistory: true, source: 'history' });
+                } else {
+                    var aiResult = document.getElementById('ai-result');
+                    if (aiResult && aiResult.style.display !== 'none') {
+                        aiResult.style.display = 'none';
+                        document.body.style.overflow = '';
+                        document.body.style.position = '';
+                        document.body.style.width = '';
+                        var buttons = document.querySelectorAll('.ai-btn');
+                        for (var i = 0; i < buttons.length; i++) {
+                            buttons[i].classList.remove('active');
+                        }
+                    }
                 }
             }
+        });
+        
+        function handleEscapeKey(e) {
+            var key = e.key || '';
+            var keyCode = typeof e.keyCode === 'number' ? e.keyCode : 0;
+            if (keyCode === 27 || key === 'Escape' || key === 'Esc') {
+                if (typeof window.closeAIPanel === 'function') {
+                    window.closeAIPanel({ skipHistory: false, source: 'keyboard' });
+                } else {
+                    var aiResult = document.getElementById('ai-result');
+                    if (aiResult && aiResult.style.display !== 'none') {
+                        aiResult.style.display = 'none';
+                        document.body.style.overflow = '';
+                        document.body.style.position = '';
+                        document.body.style.width = '';
+                        var buttons = document.querySelectorAll('.ai-btn');
+                        for (var i = 0; i < buttons.length; i++) {
+                            buttons[i].classList.remove('active');
+                        }
+                        if (window.location.hash.indexOf('&ai-open') !== -1) {
+                            try {
+                                window.history.back();
+                            } catch (err) {}
+                        }
+                    }
+                }
+                e.preventDefault();
+                if (typeof e.stopPropagation === 'function') {
+                    e.stopPropagation();
+                }
+            }
+        }
+        
+        // 添加全局键盘事件
+        document.addEventListener('keydown', function(e) {
+            handleEscapeKey(e);
+            if (e.defaultPrevented) {
+                return;
+            }
+            var hash = window.location.hash;
             
             // 左右方向键切换章节（仅在章节页面）
             if (hash.indexOf('#/book/') === 0) {
@@ -1271,6 +1318,7 @@
                 }
             }
         });
+        document.addEventListener('keyup', handleEscapeKey);
     }
     
     /**
@@ -1322,21 +1370,47 @@
             requestAI(currentAIInfo.functionType, currentAIInfo.bookId, currentAIInfo.chapter, cacheKey, true);
         };
         
+        // 关闭 AI 结果区的通用函数
+        function closeAIResult(options) {
+            var opts = options || {};
+            if (!resultBox || resultBox.style.display === 'none') {
+                return;
+            }
+            resultBox.style.display = 'none';
+            // 恢复 body 滚动
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            // 移除激活状态
+            var buttons = document.querySelectorAll('.ai-btn');
+            for (var k = 0; k < buttons.length; k++) {
+                buttons[k].classList.remove('active');
+            }
+            activeButton = null;
+            
+            // 如果需要移除 &ai-open 标记
+            if (!opts || !opts.skipHistory) {
+                if (window.location.hash.indexOf('&ai-open') !== -1) {
+                    try {
+                        window.history.back();
+                    } catch (err) {
+                        // 忽略历史操作异常
+                    }
+                }
+            }
+        }
+
         // 关闭结果框
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
-                resultBox.style.display = 'none';
-                // 恢复 body 滚动
-                document.body.style.overflow = '';
-                document.body.style.position = '';
-                // 移除激活状态
-                var buttons = document.querySelectorAll('.ai-btn');
-                for (var k = 0; k < buttons.length; k++) {
-                    buttons[k].classList.remove('active');
-                }
-                activeButton = null;
+                closeAIResult({ skipHistory: false, source: 'button' });
             });
         }
+
+        // 暴露全局关闭方法，供 ESC/返回键等调用
+        window.closeAIPanel = function(options) {
+            closeAIResult(options);
+        };
         
         // 为每个按钮绑定点击事件
         for (var i = 0; i < aiButtons.length; i++) {
@@ -1347,12 +1421,7 @@
                 
                 // 如果点击的是当前激活按钮，关闭结果框
                 if (this === activeButton && resultBox.style.display !== 'none') {
-                    resultBox.style.display = 'none';
-                    // 恢复 body 滚动
-                    document.body.style.overflow = '';
-                    document.body.style.position = '';
-                    this.classList.remove('active');
-                    activeButton = null;
+                    closeAIResult({ skipHistory: false, source: 'toggle' });
                 } else {
                     // 否则请求智能生成（或从缓存读取）
                     // 移除其他按钮的激活状态
@@ -1388,6 +1457,11 @@
             resultBox.style.display = 'block';
             // 禁止 body 滚动，防止滚动污染
             document.body.style.overflow = 'hidden';
+            
+            // 添加 hash 标记，支持返回键关闭
+            if (window.location.hash.indexOf('&ai-open') === -1) {
+                window.history.pushState(null, '', window.location.hash + '&ai-open');
+            }
             document.body.style.position = 'fixed';
             document.body.style.width = '100%';
             
@@ -1408,6 +1482,11 @@
             document.body.style.overflow = 'hidden';
             document.body.style.position = 'fixed';
             document.body.style.width = '100%';
+            
+            // 添加 hash 标记，支持返回键关闭
+            if (window.location.hash.indexOf('&ai-open') === -1) {
+                window.history.pushState(null, '', window.location.hash + '&ai-open');
+            }
             
             resultTitle.textContent = functionNames[functionType] + (forceRegenerate ? ' (重新生成中...)' : '');
             resultContent.style.display = 'none';
