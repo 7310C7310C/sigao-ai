@@ -319,10 +319,11 @@
         if (!('ontouchstart' in window)) {
             return;
         }
-        var EDGE_THRESHOLD = 28; // 触发阈值 (px)
         var startX = 0;
         var startY = 0;
-        var isEdgeGesture = false;
+        var startTime = 0;
+        var isPotentialGesture = false;
+        var isPreventing = false;
         var supportsPassive = false;
         try {
             var opts = Object.defineProperty({}, 'passive', {
@@ -336,56 +337,47 @@
             supportsPassive = false;
         }
 
-        function shouldPrevent(event) {
+        function onTouchStart(event) {
+            isPreventing = false;
             if (!event || !event.touches || event.touches.length !== 1) {
-                return false;
+                isPotentialGesture = false;
+                return;
             }
             var touch = event.touches[0];
-            var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0;
-            if (!screenWidth) {
-                return false;
-            }
-            if (touch.clientX <= EDGE_THRESHOLD || touch.clientX >= screenWidth - EDGE_THRESHOLD) {
-                startX = touch.clientX;
-                startY = touch.clientY;
-                return true;
-            }
-            return false;
-        }
-
-        function onTouchStart(event) {
-            isEdgeGesture = shouldPrevent(event);
-            if (isEdgeGesture && event && event.cancelable) {
-                try {
-                    event.preventDefault();
-                } catch (err) {}
-            }
+            startX = touch.clientX;
+            startY = touch.clientY;
+            startTime = new Date().getTime();
+            isPotentialGesture = true;
         }
 
         function onTouchMove(event) {
-            if (!isEdgeGesture) {
+            if (!isPotentialGesture) {
                 return;
             }
             if (!event || !event.touches || event.touches.length !== 1) {
-                isEdgeGesture = false;
+                isPotentialGesture = false;
                 return;
             }
             var touch = event.touches[0];
             var deltaX = Math.abs(touch.clientX - startX);
             var deltaY = Math.abs(touch.clientY - startY);
-            if (deltaX >= deltaY) {
-                if (event.cancelable) {
-                    try {
-                        event.preventDefault();
-                    } catch (err) {}
-                }
-            } else {
-                isEdgeGesture = false;
+            var elapsed = new Date().getTime() - startTime;
+            if (!isPreventing && deltaX > 32 && deltaX > deltaY * 1.2 && elapsed < 800) {
+                isPreventing = true;
+            }
+            if (isPreventing && event && event.cancelable) {
+                try {
+                    event.preventDefault();
+                } catch (err) {}
+            }
+            if (deltaY > deltaX && !isPreventing) {
+                isPotentialGesture = false;
             }
         }
 
         function onTouchEnd() {
-            isEdgeGesture = false;
+            isPotentialGesture = false;
+            isPreventing = false;
         }
 
         var listenerOptions = supportsPassive ? { passive: false, capture: true } : true;
