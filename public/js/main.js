@@ -311,6 +311,89 @@
             });
         });
     }
+
+    /**
+     * 阻止手机浏览器边缘滑动返回/前进
+     */
+    function preventEdgeSwipeNavigation() {
+        if (!('ontouchstart' in window)) {
+            return;
+        }
+        var EDGE_THRESHOLD = 28; // 触发阈值 (px)
+        var startX = 0;
+        var startY = 0;
+        var isEdgeGesture = false;
+        var supportsPassive = false;
+        try {
+            var opts = Object.defineProperty({}, 'passive', {
+                get: function() {
+                    supportsPassive = true;
+                }
+            });
+            window.addEventListener('testPassive', null, opts);
+            window.removeEventListener('testPassive', null, opts);
+        } catch (e) {
+            supportsPassive = false;
+        }
+
+        function shouldPrevent(event) {
+            if (!event || !event.touches || event.touches.length !== 1) {
+                return false;
+            }
+            var touch = event.touches[0];
+            var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0;
+            if (!screenWidth) {
+                return false;
+            }
+            if (touch.clientX <= EDGE_THRESHOLD || touch.clientX >= screenWidth - EDGE_THRESHOLD) {
+                startX = touch.clientX;
+                startY = touch.clientY;
+                return true;
+            }
+            return false;
+        }
+
+        function onTouchStart(event) {
+            isEdgeGesture = shouldPrevent(event);
+            if (isEdgeGesture && event && event.cancelable) {
+                try {
+                    event.preventDefault();
+                } catch (err) {}
+            }
+        }
+
+        function onTouchMove(event) {
+            if (!isEdgeGesture) {
+                return;
+            }
+            if (!event || !event.touches || event.touches.length !== 1) {
+                isEdgeGesture = false;
+                return;
+            }
+            var touch = event.touches[0];
+            var deltaX = Math.abs(touch.clientX - startX);
+            var deltaY = Math.abs(touch.clientY - startY);
+            if (deltaX >= deltaY) {
+                if (event.cancelable) {
+                    try {
+                        event.preventDefault();
+                    } catch (err) {}
+                }
+            } else {
+                isEdgeGesture = false;
+            }
+        }
+
+        function onTouchEnd() {
+            isEdgeGesture = false;
+        }
+
+        var listenerOptions = supportsPassive ? { passive: false, capture: true } : true;
+        document.addEventListener('touchstart', onTouchStart, listenerOptions);
+        document.addEventListener('touchmove', onTouchMove, listenerOptions);
+        document.addEventListener('touchend', onTouchEnd, listenerOptions);
+        document.addEventListener('touchcancel', onTouchEnd, listenerOptions);
+    }
     
     /**
      * 初始化
@@ -332,7 +415,7 @@
             setupPositionSaving();
             enhanceFormExperience();
         }
-        
+        preventEdgeSwipeNavigation();
         removeTapDelay();
     }
     
