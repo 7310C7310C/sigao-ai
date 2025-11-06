@@ -388,6 +388,62 @@
     }
     
     /**
+     * 在屏幕左右侧添加透明触控屏障，阻止边缘滑动
+     */
+    function setupEdgeSwipeBlockers() {
+        if (document.getElementById('edge-swipe-blocker-left')) {
+            return;
+        }
+        var blockers = [
+            { id: 'edge-swipe-blocker-left', side: 'left', position: 'left: 0;' },
+            { id: 'edge-swipe-blocker-right', side: 'right', position: 'right: 0;' }
+        ];
+        for (var i = 0; i < blockers.length; i++) {
+            var info = blockers[i];
+            var blocker = document.createElement('div');
+            blocker.id = info.id;
+            blocker.setAttribute('aria-hidden', 'true');
+            blocker.style.cssText =
+                'position: fixed;' +
+                'top: 0;' +
+                info.position +
+                'width: 2.0rem;' +
+                'height: 100%;' +
+                'z-index: 10002;' +
+                'background: rgba(0,0,0,0);' +
+                'pointer-events: auto;' +
+                'touch-action: none;';
+            blocker.addEventListener('touchstart', function(event) {
+                if (event && event.cancelable) {
+                    try { event.preventDefault(); } catch (err) {}
+                }
+            }, { passive: false });
+            blocker.addEventListener('touchmove', function(event) {
+                if (event && event.cancelable) {
+                    try { event.preventDefault(); } catch (err) {}
+                }
+            }, { passive: false });
+            blocker.addEventListener('touchend', function(event) {
+                if (event && event.cancelable) {
+                    try { event.preventDefault(); } catch (err) {}
+                }
+            }, { passive: false });
+            blocker.addEventListener('touchcancel', function(event) {
+                if (event && event.cancelable) {
+                    try { event.preventDefault(); } catch (err) {}
+                }
+            }, { passive: false });
+            blocker.addEventListener('click', function(event) {
+                if (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+            }, true);
+            document.body.appendChild(blocker);
+        }
+    }
+    
+    /**
      * 初始化
      */
     function init() {
@@ -399,6 +455,7 @@
                 restoreReadingPosition();
                 setupPositionSaving();
                 enhanceFormExperience();
+                setupEdgeSwipeBlockers();
             });
         } else {
             addBackToTopButton();
@@ -406,6 +463,7 @@
             restoreReadingPosition();
             setupPositionSaving();
             enhanceFormExperience();
+            setupEdgeSwipeBlockers();
         }
         preventEdgeSwipeNavigation();
         removeTapDelay();
