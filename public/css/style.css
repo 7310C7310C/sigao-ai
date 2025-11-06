@@ -17,9 +17,6 @@ html {
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    /* 禁止浏览器滑动返回/前进手势 */
-    overscroll-behavior-x: none;
-    -webkit-overscroll-behavior-x: none;
 }
 
 body {
@@ -32,11 +29,6 @@ body {
     margin: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* 禁止浏览器滑动返回/前进手势 */
-    overscroll-behavior-x: none;
-    -webkit-overscroll-behavior-x: none;
-    touch-action: pan-y;
-    -ms-touch-action: pan-y;
 }
 
 /* 容器 */
