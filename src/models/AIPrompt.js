@@ -58,6 +58,12 @@ class AIPrompt {
     var messages = [];
     
     try {
+      // 简单的时间格式化（YYYY/MM/DD HH:mm:ss）
+      function pad2(n) { return (n < 10 ? '0' : '') + n; }
+      var now = new Date();
+      var formattedNow = now.getFullYear() + '/' + pad2(now.getMonth() + 1) + '/' + pad2(now.getDate()) +
+                         ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
+
       // 1. 添加 system prompt
       var systemPrompt = await this.getSystemPrompt(lang);
       if (systemPrompt) {
@@ -82,6 +88,9 @@ class AIPrompt {
             }
           }
         }
+        
+        // 在提示词末尾追加当前时间（用于增加回答随机性/语境新鲜度）
+        content = content + '\n\n' + '（当前时间：' + formattedNow + '）';
         
         messages.push({
           role: 'user',
