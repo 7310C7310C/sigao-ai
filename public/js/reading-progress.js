@@ -189,9 +189,30 @@
             return;
         }
         
+        // 优先使用当前全局进度；不匹配则回退到历史记录中对应章节的进度
         var progress = getReadingProgress();
         if (!progress || progress.path !== pageInfo.path) {
-            return;
+            // 在历史记录中查找与当前页面匹配的记录
+            try {
+                var history = getReadingHistory();
+                if (history && history.length) {
+                    for (var i = 0; i < history.length; i++) {
+                        var item = history[i];
+                        // 先按 path 精确匹配，其次按 bookId + chapter 匹配
+                        if ((item.path && item.path === pageInfo.path) ||
+                            (item.bookId === pageInfo.bookId && item.chapter === pageInfo.chapter)) {
+                            progress = item;
+                            break;
+                        }
+                    }
+                }
+            } catch (e) {
+                // 忽略历史读取异常
+            }
+            // 若依然没有匹配记录，直接返回
+            if (!progress || ((progress.path !== pageInfo.path) && !(progress.bookId === pageInfo.bookId && progress.chapter === pageInfo.chapter))) {
+                return;
+            }
         }
         
         // 等待页面渲染完成
